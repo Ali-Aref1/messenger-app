@@ -3,6 +3,7 @@ const app = express();
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const os = require('os'); // Required to get network interfaces
 const server = http.createServer(app);
 
 app.use(cors());
@@ -20,13 +21,28 @@ server.listen(serverPort, '0.0.0.0', () => {
 
 const users = {}; // { socketId: userIp }
 
+// Get the host's actual IPv4 address
+function getHostIpAddress() {
+  const networkInterfaces = os.networkInterfaces();
+  for (const iface of Object.values(networkInterfaces)) {
+    for (const alias of iface) {
+      if (alias.family === 'IPv4' && !alias.internal) {
+        return alias.address;
+      }
+    }
+  }
+  return '127.0.0.1'; // Fallback if no IPv4 address is found
+}
+
+const hostIp = getHostIpAddress(); // Get host IPv4 address once
+
 io.on('connection', (socket) => {
   // Retrieve the user's IP address and prefer IPv4
   let userIp = (socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '');
 
-  // Check for IPv6 addresses and convert `::1` to `127.0.0.1`
-  if (userIp.includes('::1')) {
-    userIp = '127.0.0.1';
+  // Check for IPv6 addresses and convert `::1` to the host's actual IPv4 address
+  if (userIp.includes('::1') || userIp.includes('127.0.0.1')) {
+    userIp = hostIp;
   } else if (userIp.includes(',')) {
     // If the IP is in a comma-separated list (e.g., '::1, 127.0.0.1'), pick the IPv4
     userIp = userIp.split(',').find(ip => !ip.includes(':')).trim();
