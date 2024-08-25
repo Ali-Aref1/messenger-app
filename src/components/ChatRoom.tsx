@@ -3,8 +3,8 @@ import { useSocket } from '../SocketContext';
 
 interface Message {
   text: string;
-  sent: Date | string; // Accept both Date and string
-  from: string; // This will contain the sender's IP
+  sent: Date | string;
+  from: string;
   to: string;
   attachments: string[] | null;
 }
@@ -18,35 +18,84 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [isContactsOpen, setIsContactsOpen] = React.useState<boolean>(false);
   const contactsRef = useRef<HTMLDivElement>(null);
-  const socket = useSocket();
-  const userIp = useRef<string | null>(null);
+  const { socket, userIp } = useSocket();
 
   useEffect(() => {
-    // Fetch user IP when socket connects
-    socket?.on('connect', () => {
-      userIp.current = socket?.id ?? 'Unknown IP'; // Use socket id or modify server to emit actual IP
-    });
+    if (socket) {
+      const handleReceiveMessage = (message: Message) => {
+        console.log('Received message:', message);
 
-    return () => {
-      socket?.off('connect');
-    };
-  }, [socket]);
+        if (typeof message.sent === 'string') {
+          message.sent = new Date(message.sent);
+        }
+
+        // Log selectedChat and userIp for debugging
+        console.log('Selected chat:', selectedChat);
+        console.log('User IP:', userIp);
+
+        if (message.to === userIp && message.from === selectedChat) {
+          setMessages(prevMessages => {
+            // Log previous messages
+            console.log('Previous messages:', prevMessages);
+
+            // Check for duplicates
+            const messageExists = prevMessages.some(msg =>
+              msg.text === message.text &&
+              new Date(msg.sent).getTime() === new Date(message.sent).getTime() &&
+              msg.from === message.from
+            );
+
+            if (messageExists) {
+              console.log('Message already exists:', message);
+              return prevMessages;
+            }
+
+            console.log('Adding new message:', message);
+            return [...prevMessages, message];
+          });
+        }
+      };
+
+      socket.on('receiveMessage', handleReceiveMessage);
+
+      return () => {
+        socket.off('receiveMessage', handleReceiveMessage);
+      };
+    }
+  }, [socket, selectedChat, userIp]);
 
   const sendMessage = () => {
-    if (msg.trim() === '' || !selectedChat) return;
+    if (msg.trim() === '' || !selectedChat || !userIp) return;
 
     const newMessage: Message = {
       text: msg,
       sent: new Date(),
-      from: "You",
+      from: userIp,
       to: selectedChat,
       attachments: null,
     };
 
-    // Emit the message to the server
     socket?.emit('sendMessage', newMessage);
-    // Display the sent message in the chat
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    setMessages(prevMessages => {
+      console.log('Previous messages before sending:', prevMessages);
+
+      // Check for duplicates
+      const messageExists = prevMessages.some(msg =>
+        msg.text === newMessage.text &&
+        new Date(msg.sent).getTime() === new Date(newMessage.sent).getTime() &&
+        msg.from === newMessage.from
+      );
+
+      if (messageExists) {
+        console.log('Message already exists:', newMessage);
+        return prevMessages;
+      }
+
+      console.log('Sending new message:', newMessage);
+      return [...prevMessages, newMessage];
+    });
+
     setMsg('');
   };
 
@@ -61,7 +110,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
     setIsContactsOpen(!isContactsOpen);
   };
 
-  // Close contacts menu if clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (contactsRef.current && !contactsRef.current.contains(event.target as Node)) {
@@ -80,29 +128,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
     };
   }, [isContactsOpen]);
 
-  useEffect(() => {
-    // Listen for incoming messages
-    socket?.on('receiveMessage', (message: Message) => {
-      // Convert `sent` to a Date object if it's a string
-      if (typeof message.sent === 'string') {
-        message.sent = new Date(message.sent);
-      }
-      // Only display the message if it is for the selected chat or if it is from the current user
-      if (message.from === selectedChat) {
-        setMessages((prevMessages) => [...prevMessages, message]);
-      }
-    });
-
-    return () => {
-      socket?.off('receiveMessage');
-    };
-  }, [socket, selectedChat]);
-
   return (
     <div className='relative rounded-2xl border-2 border-black w-[90vw] h-[90vh] flex flex-col'>
       <div className='w-full h-full overflow-y-auto'>
         {messages.map((message, index) => {
-          // Ensure `sent` is a Date object before calling `toLocaleTimeString()`
           const sentDate = typeof message.sent === 'string' ? new Date(message.sent) : message.sent;
           return (
             <div key={index} className='p-2'>
