@@ -133,9 +133,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       <div className='w-full h-full overflow-y-auto flex flex-col'>
         {messages.map((message, index) => {
           const sentDate = typeof message.sent === 'string' ? new Date(message.sent) : message.sent;
-          console.log(message.from, userIp.current);
           return (
-            <div key={index} className={`p-2 bg-gray-600 w-fit rounded-2xl mx-2 my-2 text-wrap max-w-full ${message.from === userIp.current ? 'self-end' : 'self-start'}`}>
+            <div key={index} className={`p-2 bg-gray-600 w-fit rounded-2xl mx-2 my-2 text-wrap max-w-full`}>
               <div><strong>{message.from}</strong>: {message.text}</div>
               <div className='text-xs text-gray-500'>{sentDate.toLocaleTimeString()}</div>
             </div>
