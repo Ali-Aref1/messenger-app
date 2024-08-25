@@ -1,5 +1,5 @@
 import { ChatRoom } from './components/ChatRoom';
-import { ChakraProvider, Center } from '@chakra-ui/react';
+import { ChakraProvider, Center, Flex } from '@chakra-ui/react';
 import { TopBar } from './components/TopBar';
 import { Contacts } from './components/Contacts';
 import { SocketProvider } from './SocketContext';
@@ -17,8 +17,10 @@ function App() {
       <TopBar />
       <Center h="93vh">
         <SocketProvider>
+          <div className='flex justify-between w-full'>
           <Contacts selectedContact={selectedContact} onSelectContact={handleSelectContact} />
           <ChatRoom selectedChat={selectedContact} />
+          </div>
         </SocketProvider>
       </Center>
     </ChakraProvider>

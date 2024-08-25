@@ -16,10 +16,10 @@ function LanguageSwitcher() {
 
   return (
     <div className='rounded-full bg-slate-800 text-white px-4 py-2 h-10 my-auto mx-2'>
-      {currentLanguage !== 'en' && (
+      {currentLanguage == 'ar' && (
         <button onClick={() => changeLanguage('en')}>English</button>
       )}
-      {currentLanguage !== 'ar' && (
+      {currentLanguage == 'en' && (
         <button onClick={() => changeLanguage('ar')}>العربية</button>
       )}
     </div>

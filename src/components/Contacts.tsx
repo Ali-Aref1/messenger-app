@@ -24,7 +24,7 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, onSelectCon
   }, [socket]);
 
   return (
-    <div className='relative mx-4 h-[90vh] mt-4 flex flex-col bg-slate-500 items-center p-4'>
+    <div className='relative mx-4 h-[88vh] mt-4 flex flex-col bg-slate-500 items-center p-4'>
       <button
         className='mx-4 rounded-full bg-slate-400 h-20 w-full'
         onClick={() => setIsContactsOpen(!isContactsOpen)}
