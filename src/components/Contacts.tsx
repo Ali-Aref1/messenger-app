@@ -1,40 +1,46 @@
-// Contacts.tsx
 import React, { useEffect, useState } from 'react';
 import { useSocket } from '../SocketContext';
 import { Spinner, Box } from '@chakra-ui/react';
 
 interface ContactsProps {
   selectedContact: string | null;
-  onSelectContact: (contactId: string) => void;
+  setSelectedContact: (contactId: string | null) => void;
 }
 
-export const Contacts: React.FC<ContactsProps> = ({ selectedContact, onSelectContact }) => {
+export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelectedContact }) => {
   const [isContactsOpen, setIsContactsOpen] = useState<boolean>(false);
   const [clients, setClients] = useState<string[]>([]);
   const { socket, userIp } = useSocket(); // Destructure userIp from useSocket
 
   useEffect(() => {
-
+    if (selectedContact && !clients.includes(selectedContact)) {
+      console.log('clearing selectedContact')
+      setSelectedContact(null);
+    }
+  },[clients]);
+    
+  useEffect(() => {
     if (socket) {
       socket.on('updateClients', (clientList: string[]) => {
         if (userIp) {
           const filteredClients = clientList.filter(ip => ip !== userIp);
           console.log('Received and filtered client list:', filteredClients);
           setClients(filteredClients);
+          console.log(selectedContact);
+
         }
       });
 
-      // Request the client list once the userIp is available
-      if (userIp) {
-        
-      }
-
-      // Clean up the socket connection when the component unmounts
       return () => {
         socket.off('updateClients');
       };
     }
   }, [socket, userIp]);
+
+  useEffect(() => {
+    // Log the updated selectedContact whenever it changes
+    console.log('Updated selectedContact:', selectedContact);
+  }, [selectedContact]);
 
   return (
     <div className='relative mx-4 h-[88vh] mt-4 flex flex-col bg-slate-500 items-center p-4'>
@@ -55,12 +61,15 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, onSelectCon
         ) : isContactsOpen ? (
           <ul>
             {clients.length === 0 ? (
-              <li>No clients connected</li>
+              <li>No online users</li>
             ) : (
               clients.map((clientId, index) => (
                 <li
                   key={index}
-                  onClick={() => onSelectContact(clientId)}
+                  onClick={() => {
+                    setSelectedContact(clientId);
+                    console.log('Clicked on clientId:', clientId); // Log the clicked client ID
+                  }}
                   className={`transition-colors p-2 cursor-pointer ${clientId === selectedContact ? 'bg-blue-400 text-white' : ''}`}
                 >
                   {clientId}

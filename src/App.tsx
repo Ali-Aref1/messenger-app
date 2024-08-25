@@ -8,17 +8,13 @@ import { useState } from 'react';
 function App() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
 
-  const handleSelectContact = (contactId: string) => {
-    setSelectedContact(contactId);
-  };
-
   return (
     <ChakraProvider>
       <TopBar />
       <Center h="93vh">
         <SocketProvider>
           <div className='flex justify-between w-full'>
-          <Contacts selectedContact={selectedContact} onSelectContact={handleSelectContact} />
+          <Contacts selectedContact={selectedContact} setSelectedContact={setSelectedContact} />
           <ChatRoom selectedChat={selectedContact} />
           </div>
         </SocketProvider>
