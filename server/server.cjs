@@ -14,22 +14,34 @@ const io = new Server(server, {
 });
 
 const serverPort = process.env.YOUR_PORT || process.env.PORT || 4000;
-server.listen(serverPort, () => {
+server.listen(serverPort, '0.0.0.0', () => {
   console.log('Listening on port ' + serverPort);
 });
 
 const users = {}; // { socketId: userIp }
 
 io.on('connection', (socket) => {
-  // Retrieve the user's IP address and trim the `::ffff:` prefix
-  const userIp = (socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '')
-    .replace(/^::ffff:/, '');
+  // Retrieve the user's IP address and prefer IPv4
+  let userIp = (socket.handshake.headers['x-forwarded-for'] || socket.handshake.address || '');
+
+  // Check for IPv6 addresses and convert `::1` to `127.0.0.1`
+  if (userIp.includes('::1')) {
+    userIp = '127.0.0.1';
+  } else if (userIp.includes(',')) {
+    // If the IP is in a comma-separated list (e.g., '::1, 127.0.0.1'), pick the IPv4
+    userIp = userIp.split(',').find(ip => !ip.includes(':')).trim();
+  }
 
   console.log('New user connected: ' + socket.id + ' with IP: ' + userIp);
   users[socket.id] = userIp;
 
-  // Notify other clients of the new user
-  io.emit('updateClients', getClientList());
+  // Notify all clients with a filtered list excluding their own IP
+  for (const [socketId] of Object.entries(users)) {
+    const clientSocket = io.sockets.sockets.get(socketId);
+    if (clientSocket) {
+      clientSocket.emit('updateClients', getClientList(users[socketId]));
+    }
+  }
 
   socket.on('sendMessage', (message) => {
     // Add the IP address to the message
@@ -48,13 +60,19 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('A user disconnected');
     delete users[socket.id];
-    io.emit('updateClients', getClientList());
+    // Update all remaining clients with the filtered list
+    for (const [socketId] of Object.entries(users)) {
+      const clientSocket = io.sockets.sockets.get(socketId);
+      if (clientSocket) {
+        clientSocket.emit('updateClients', getClientList(users[socketId]));
+      }
+    }
   });
 });
 
-function getClientList() {
-  // This function should return a list of connected users
-  return Object.values(users);
+function getClientList(excludeUserIp) {
+  // Return a list of users, excluding the IP of the receiving user
+  return Object.values(users).filter(ip => ip !== excludeUserIp);
 }
 
 function getSocketIdByUserIp(userIp) {

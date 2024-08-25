@@ -32,7 +32,7 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, onSelectCon
         Contacts
       </button>
       <div
-        className={`relative ${isContactsOpen ? 'w-60' : 'w-0'} transition-all bg-slate-200 flex-grow rounded-2xl p-4 my-4 mx-4 overflow-hidden`}
+        className={`relative ${isContactsOpen ? 'w-60' : 'w-0'} transition-all bg-slate-200 flex-grow rounded-2xl p-4 my-4 mx-4 text-gray-600 overflow-hidden`}
         style={{ height: 'calc(100% - 1rem)' }} // Adjust height if necessary
       >
         {isContactsOpen && (
