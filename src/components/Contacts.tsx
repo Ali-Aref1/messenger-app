@@ -14,21 +14,20 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
 
   useEffect(() => {
     if (selectedContact && !clients.includes(selectedContact)) {
-      console.log('clearing selectedContact')
+      console.log('Clearing selectedContact');
       setSelectedContact(null);
     }
-  },[clients]);
-    
-  useEffect(() => {
-    if (socket) {
-      socket.on('updateClients', (clientList: string[]) => {
-        if (userIp) {
-          const filteredClients = clientList.filter(ip => ip !== userIp);
-          console.log('Received and filtered client list:', filteredClients);
-          setClients(filteredClients);
-          console.log(selectedContact);
+  }, [clients]);
 
-        }
+  useEffect(() => {
+    if (socket && userIp) {
+      // Request the client list when the component is mounted
+      socket.emit('requestClients');
+
+      socket.on('updateClients', (clientList: string[]) => {
+        const filteredClients = clientList.filter(ip => ip !== userIp);
+        console.log('Received and filtered client list:', filteredClients);
+        setClients(filteredClients);
       });
 
       return () => {
