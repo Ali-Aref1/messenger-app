@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useRef } from 'react';
+import React, { ChangeEvent, useEffect, useState } from 'react';
 import { useSocket } from '../SocketContext';
 
 interface Message {
@@ -14,8 +14,8 @@ interface ChatRoomProps {
 }
 
 export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
-  const [msg, setMsg] = React.useState<string>('');
-  const [messages, setMessages] = React.useState<Message[]>([]);
+  const [msg, setMsg] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const { socket, userIp } = useSocket();
 
   useEffect(() => {
@@ -86,34 +86,28 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
                     message.from === userIp ? "self-end bg-sky-600 text-white" : "self-start bg-slate-300"
                   }`}
                 >
-                  <div>
-                    <strong>{message.from}</strong>: {message.text}
-                  </div>
-                  <div
-                    className={`italic text-xs ${
-                      message.from === userIp ? "text-gray-300" : "text-gray-500"
-                    }`}
-                  >
+                  {message.text}
+                  <div className="text-xs text-gray-500 text-right">
                     {sentDate.toLocaleTimeString()}
                   </div>
                 </div>
               );
             })
-          : <div className="flex justify-center items-center h-full">Select a chat to start messaging</div>}
+          : <div className="p-2">Select a chat to start messaging</div>
+        }
       </div>
-
-      <div
-        className={`w-full transition-all h-24 self-end flex gap-4 bg-slate-600 items-center rounded-b-xl z-0 ${!selectedChat && "translate-y-24"}`}
-        style={{ zIndex: 1 }}
-      >
+      <div className="w-full px-4 py-2 flex gap-2 items-center border-t-2 border-black">
         <input
           type="text"
-          className="w-[calc(100%-5rem)] h-10 border-b-2 mx-4 rounded-full px-4"
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setMsg(e.target.value)}
           value={msg}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setMsg(e.target.value)}
           onKeyDown={handleKeyPress}
+          className="w-full px-4 py-2 border-2 border-black rounded-lg"
         />
-        <button className="w-20 bg-white rounded-full h-10 mx-4" onClick={sendMessage}>
+        <button
+          onClick={sendMessage}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+        >
           Send
         </button>
       </div>

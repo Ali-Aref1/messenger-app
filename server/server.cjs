@@ -4,8 +4,8 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const os = require('os');
-const fs = require('fs'); // Required for file system operations
-const path = require('path'); // Required for working with file paths
+const fs = require('fs');
+const path = require('path');
 const server = http.createServer(app);
 
 app.use(cors());
@@ -22,6 +22,27 @@ server.listen(serverPort, '0.0.0.0', () => {
 });
 
 const users = {}; // { socketId: userIp }
+
+// Helper function to get or create a file path for registered users
+function getRegisteredUsersFilePath() {
+  return path.join(__dirname, 'registered_users.json');
+}
+
+// Helper function to load registered users from file
+function loadRegisteredUsers() {
+  const filePath = getRegisteredUsersFilePath();
+  if (fs.existsSync(filePath)) {
+    const fileContent = fs.readFileSync(filePath);
+    return JSON.parse(fileContent);
+  }
+  return [];
+}
+
+// Helper function to save registered users to file
+function saveRegisteredUsers(users) {
+  const filePath = getRegisteredUsersFilePath();
+  fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
+}
 
 // Get the host's actual IPv4 address
 function getHostIpAddress() {
@@ -40,12 +61,10 @@ const hostIp = getHostIpAddress(); // Get host IPv4 address once
 
 // Helper function to get or create a file path for messages between two IPs
 function getMessageFilePath(fromIp, toIp) {
-  // Ensure IPs are in a consistent order to avoid duplicate file creation
   const sortedIps = [fromIp, toIp].sort();
   const fileName = `${sortedIps[0]}_to_${sortedIps[1]}.json`;
   const filePath = path.join(__dirname, 'messages', fileName);
 
-  // Ensure the directory exists
   if (!fs.existsSync(path.dirname(filePath))) {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
   }
@@ -57,24 +76,28 @@ function getMessageFilePath(fromIp, toIp) {
 function saveMessage(fromIp, toIp, message) {
   const filePath = getMessageFilePath(fromIp, toIp);
 
-  // Read existing messages from the file, if any
   let messages = [];
   if (fs.existsSync(filePath)) {
     const fileContent = fs.readFileSync(filePath);
     messages = JSON.parse(fileContent);
   }
 
-  // Add the new message to the list
   messages.push(message);
-
-  // Save the updated messages back to the file
   fs.writeFileSync(filePath, JSON.stringify(messages, null, 2));
+}
+
+// Update the list of registered users based on connection status
+function updateRegisteredUsers(userIp) {
+  const registeredUsers = loadRegisteredUsers();
+  if (!registeredUsers.includes(userIp)) {
+    registeredUsers.push(userIp);
+    saveRegisteredUsers(registeredUsers);
+  }
 }
 
 io.on('connection', (socket) => {
   let userIp = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress || '';
 
-  // Check for IPv6 addresses and convert `::1` to the host's actual IPv4 address
   if (userIp.includes('::1') || userIp.includes('127.0.0.1')) {
     userIp = hostIp;
   } else if (userIp.includes(',')) {
@@ -85,30 +108,31 @@ io.on('connection', (socket) => {
   socket.emit('receiveIp', userIp);
   users[socket.id] = userIp;
 
-  // Notify all clients about the updated client list
-  io.emit('updateClients', Object.values(users));
+  updateRegisteredUsers(userIp);
 
-  // Send the client list to the newly connected user
-  socket.emit('updateClients', Object.values(users));
+  const onlineUsers = Object.values(users);
+  const registeredUsers = loadRegisteredUsers();
+  const offlineUsers = registeredUsers.filter(ip => !onlineUsers.includes(ip));
+
+  io.emit('updateClients', { online: onlineUsers, offline: offlineUsers });
+  socket.emit('updateClients', { online: onlineUsers, offline: offlineUsers });
 
   socket.on('requestClients', () => {
-    socket.emit('updateClients', Object.values(users));
+    const onlineUsers = Object.values(users);
+    const registeredUsers = loadRegisteredUsers();
+    const offlineUsers = registeredUsers.filter(ip => !onlineUsers.includes(ip));
+    socket.emit('updateClients', { online: onlineUsers, offline: offlineUsers });
   });
 
   socket.on('requestChatLog', (chatWithIp) => {
-    // Determine the current user's IP
     const userIp = users[socket.id];
     if (userIp) {
-      // Get the message file path
       const filePath = getMessageFilePath(userIp, chatWithIp);
-
       if (fs.existsSync(filePath)) {
         const fileContent = fs.readFileSync(filePath);
         const chatLog = JSON.parse(fileContent);
-        // Send the chat log to the requesting user
         socket.emit('receiveChatLog', chatLog);
       } else {
-        // Send an empty array if no chat log exists
         socket.emit('receiveChatLog', []);
       }
     }
@@ -121,16 +145,25 @@ io.on('connection', (socket) => {
 
     if (recipientSocketId) {
       io.to(recipientSocketId).emit('receiveMessage', message);
-      
-      // Save the message between sender and recipient IPs
-      saveMessage(message.from, message.to, message);
     }
+
+    // Save the message regardless of recipient's online status
+    saveMessage(message.from, message.to, message);
   });
 
   socket.on('disconnect', () => {
     console.log('A user disconnected');
+    const disconnectedIp = users[socket.id];
+    if (disconnectedIp) {
+      // User remains in the registered_users.json file
+    }
     delete users[socket.id];
-    io.emit('updateClients', Object.values(users));
+
+    const onlineUsers = Object.values(users);
+    const registeredUsers = loadRegisteredUsers();
+    const offlineUsers = registeredUsers.filter(ip => !onlineUsers.includes(ip));
+
+    io.emit('updateClients', { online: onlineUsers, offline: offlineUsers });
   });
 });
 
