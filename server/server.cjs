@@ -89,8 +89,10 @@ function saveMessage(fromIp, toIp, message) {
 // Update the list of registered users based on connection status
 function updateRegisteredUsers(userIp) {
   const registeredUsers = loadRegisteredUsers();
-  if (!registeredUsers.includes(userIp)) {
-    registeredUsers.push(userIp);
+  let user = registeredUsers.find(u => u.ip === userIp);
+  if (!user) {
+    user = { ip: userIp, name: 'Unknown User' };
+    registeredUsers.push(user);
     saveRegisteredUsers(registeredUsers);
   }
 }
@@ -112,16 +114,16 @@ io.on('connection', (socket) => {
 
   const onlineUsers = Object.values(users);
   const registeredUsers = loadRegisteredUsers();
-  const offlineUsers = registeredUsers.filter(ip => !onlineUsers.includes(ip));
+  const offlineUsers = registeredUsers.filter(user => !onlineUsers.includes(user.ip));
 
-  io.emit('updateClients', { online: onlineUsers, offline: offlineUsers });
-  socket.emit('updateClients', { online: onlineUsers, offline: offlineUsers });
+  io.emit('updateClients', { online: onlineUsers.map(ip => registeredUsers.find(u => u.ip === ip)), offline: offlineUsers });
+  socket.emit('updateClients', { online: onlineUsers.map(ip => registeredUsers.find(u => u.ip === ip)), offline: offlineUsers });
 
   socket.on('requestClients', () => {
     const onlineUsers = Object.values(users);
     const registeredUsers = loadRegisteredUsers();
-    const offlineUsers = registeredUsers.filter(ip => !onlineUsers.includes(ip));
-    socket.emit('updateClients', { online: onlineUsers, offline: offlineUsers });
+    const offlineUsers = registeredUsers.filter(user => !onlineUsers.includes(user.ip));
+    socket.emit('updateClients', { online: onlineUsers.map(ip => registeredUsers.find(u => u.ip === ip)), offline: offlineUsers });
   });
 
   socket.on('requestChatLog', (chatWithIp) => {
@@ -161,9 +163,9 @@ io.on('connection', (socket) => {
 
     const onlineUsers = Object.values(users);
     const registeredUsers = loadRegisteredUsers();
-    const offlineUsers = registeredUsers.filter(ip => !onlineUsers.includes(ip));
+    const offlineUsers = registeredUsers.filter(user => !onlineUsers.includes(user.ip));
 
-    io.emit('updateClients', { online: onlineUsers, offline: offlineUsers });
+    io.emit('updateClients', { online: onlineUsers.map(ip => registeredUsers.find(u => u.ip === ip)), offline: offlineUsers });
   });
 });
 

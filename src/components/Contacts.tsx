@@ -2,6 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useSocket } from '../SocketContext';
 import { Spinner, Box, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 
+interface User {
+  ip: string;
+  name: string;
+}
+
 interface ContactsProps {
   selectedContact: string | null;
   setSelectedContact: (contactId: string | null) => void;
@@ -9,18 +14,18 @@ interface ContactsProps {
 
 export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelectedContact }) => {
   const [isContactsOpen, setIsContactsOpen] = useState<boolean>(false);
-  const [onlineClients, setOnlineClients] = useState<string[]>([]);
-  const [offlineClients, setOfflineClients] = useState<string[]>([]);
+  const [onlineClients, setOnlineClients] = useState<User[]>([]);
+  const [offlineClients, setOfflineClients] = useState<User[]>([]);
   const { socket, userIp } = useSocket();
 
   useEffect(() => {
     if (socket && userIp) {
       socket.emit('requestClients');
 
-      socket.on('updateClients', (data: { online: string[], offline: string[] }) => {
+      socket.on('updateClients', (data: { online: User[], offline: User[] }) => {
         if (data && Array.isArray(data.online) && Array.isArray(data.offline)) {
-          const filteredOnline = data.online.filter(ip => ip !== userIp);
-          const filteredOffline = data.offline.filter(ip => ip !== userIp);
+          const filteredOnline = data.online.filter(user => user.ip !== userIp);
+          const filteredOffline = data.offline.filter(user => user.ip !== userIp);
           setOnlineClients(filteredOnline);
           setOfflineClients(filteredOffline);
         } else {
@@ -33,7 +38,6 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
       };
     }
   }, [socket, userIp]);
-
 
   return (
     <div className='relative mx-4 h-[88vh] mt-4 flex flex-col bg-slate-500 items-center p-4'>
@@ -49,10 +53,10 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
       >
         {userIp === null ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <Spinner size="xl" />
+            <Spinner />
           </Box>
-        ) : isContactsOpen ? (
-          <Tabs variant="enclosed">
+        ) : (
+          <Tabs variant='enclosed'>
             <TabList>
               <Tab>Online</Tab>
               <Tab>Offline</Tab>
@@ -60,45 +64,41 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
             <TabPanels>
               <TabPanel>
                 <ul>
-                  {onlineClients.length === 0 ? (
-                    <li>No online users</li>
-                  ) : (
-                    onlineClients.map((clientId, index) => (
+                  {onlineClients.length > 0 ? (
+                    onlineClients.map((client) => (
                       <li
-                        key={index}
-                        onClick={() => {
-                          setSelectedContact(clientId);
-                        }}
-                        className={`transition-colors p-2 cursor-pointer ${clientId === selectedContact ? 'bg-blue-400 text-white' : ''}`}
+                        key={client.ip}
+                        onClick={() => setSelectedContact(client.ip)}
+                        className={`cursor-pointer hover:bg-gray-300 p-2 rounded ${selectedContact === client.ip ? 'bg-gray-400' : ''}`}
                       >
-                        {clientId}
+                        {client.name}
                       </li>
                     ))
+                  ) : (
+                    <p>No online clients</p>
                   )}
                 </ul>
               </TabPanel>
               <TabPanel>
                 <ul>
-                  {offlineClients.length === 0 ? (
-                    <li>No offline users</li>
-                  ) : (
-                    offlineClients.map((clientId, index) => (
+                  {offlineClients.length > 0 ? (
+                    offlineClients.map((client) => (
                       <li
-                        key={index}
-                        onClick={() => {
-                          setSelectedContact(clientId);
-                        }}
-                        className={`transition-colors p-2 cursor-pointer ${clientId === selectedContact ? 'bg-blue-400 text-white' : ''}`}
+                        key={client.ip}
+                        onClick={() => setSelectedContact(client.ip)}
+                        className={`cursor-pointer hover:bg-gray-300 p-2 rounded ${selectedContact === client.ip ? 'bg-gray-400' : ''}`}
                       >
-                        {clientId}
+                        {client.name}
                       </li>
                     ))
+                  ) : (
+                    <p>No offline clients</p>
                   )}
                 </ul>
               </TabPanel>
             </TabPanels>
           </Tabs>
-        ) : null}
+        )}
       </div>
     </div>
   );
