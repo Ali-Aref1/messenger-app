@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState, useRef } from 'react';
 import { useSocket } from '../SocketContext';
 
 interface Message {
@@ -17,6 +17,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   const [msg, setMsg] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const { socket, userIp } = useSocket();
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  const scrollToBottom = () => {
+        if (chatContainerRef.current) chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  };
 
   useEffect(() => {
     if (socket && selectedChat) {
@@ -31,14 +36,18 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
           ...msg,
           sent: typeof msg.sent === 'string' ? new Date(msg.sent) : msg.sent,
         })));
+        setTimeout(scrollToBottom,10);
       });
 
       // Listen for live messages
       socket.on('receiveMessage', (message: Message) => {
         if (message.from === selectedChat || message.to === selectedChat) {
           setMessages(prevMessages => [...prevMessages, message]);
+          if(chatContainerRef.current && chatContainerRef.current.scrollTop+chatContainerRef.current.clientHeight >= chatContainerRef.current.scrollHeight) {
+            console.log("scroll");
+            setTimeout(scrollToBottom,10);
         }
-      });
+      }});
 
       // Clean up socket listeners on unmount or when selectedChat changes
       return () => {
@@ -75,7 +84,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
 
   return (
     <div className="relative rounded-2xl border-2 border-black w-full h-[90vh] flex flex-col mx-4 overflow-hidden">
-      <div className="w-full h-full overflow-y-auto flex flex-col">
+      <div ref={chatContainerRef} className="w-full h-full overflow-y-auto flex flex-col">
         {selectedChat
           ? messages.map((message, index) => {
               const sentDate = typeof message.sent === "string" ? new Date(message.sent) : message.sent;

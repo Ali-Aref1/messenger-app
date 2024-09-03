@@ -97,6 +97,10 @@ function updateRegisteredUsers(userIp) {
   }
 }
 
+function removeDuplicateIps(ips) {
+  return [...new Set(ips)];
+}
+
 io.on('connection', (socket) => {
   let userIp = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress || '';
 
@@ -112,7 +116,7 @@ io.on('connection', (socket) => {
 
   updateRegisteredUsers(userIp);
 
-  const onlineUsers = Object.values(users);
+  const onlineUsers = removeDuplicateIps(Object.values(users));
   const registeredUsers = loadRegisteredUsers();
   const offlineUsers = registeredUsers.filter(user => !onlineUsers.includes(user.ip));
 
@@ -120,7 +124,7 @@ io.on('connection', (socket) => {
   socket.emit('updateClients', { online: onlineUsers.map(ip => registeredUsers.find(u => u.ip === ip)), offline: offlineUsers });
 
   socket.on('requestClients', () => {
-    const onlineUsers = Object.values(users);
+    const onlineUsers = removeDuplicateIps(Object.values(users));
     const registeredUsers = loadRegisteredUsers();
     const offlineUsers = registeredUsers.filter(user => !onlineUsers.includes(user.ip));
     socket.emit('updateClients', { online: onlineUsers.map(ip => registeredUsers.find(u => u.ip === ip)), offline: offlineUsers });
@@ -161,7 +165,7 @@ io.on('connection', (socket) => {
     }
     delete users[socket.id];
 
-    const onlineUsers = Object.values(users);
+    const onlineUsers = removeDuplicateIps(Object.values(users));
     const registeredUsers = loadRegisteredUsers();
     const offlineUsers = registeredUsers.filter(user => !onlineUsers.includes(user.ip));
 
