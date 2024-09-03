@@ -17,6 +17,7 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
   const [onlineClients, setOnlineClients] = useState<User[]>([]);
   const [offlineClients, setOfflineClients] = useState<User[]>([]);
   const { socket, userIp } = useSocket();
+  {/*test*/}
 
   useEffect(() => {
     if (socket && userIp) {
