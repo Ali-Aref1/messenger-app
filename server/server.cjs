@@ -6,15 +6,29 @@ const cors = require('cors');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
+const { log } = require('console');
+const bodyParser = require('body-parser');
 const server = http.createServer(app);
 
+// Middleware
 app.use(cors());
+app.use(express.json()); // For parsing application/json
+app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
+// Add this line after initializing the app
+app.use('/attachments', express.static(path.join(__dirname, 'chats')));
 
+
+// Set up multer for file handling
+const upload = multer({ dest: 'uploads/' });
+
+// Initialize socket.io
 const io = new Server(server, {
   cors: {
     methods: ['GET', 'POST'],
   },
-});
+}
+);
 
 const serverPort = process.env.YOUR_PORT || process.env.PORT || 4000;
 server.listen(serverPort, '0.0.0.0', () => {
@@ -23,12 +37,11 @@ server.listen(serverPort, '0.0.0.0', () => {
 
 const users = {}; // { socketId: userIp }
 
-// Helper function to get or create a file path for registered users
+// Helper functions
 function getRegisteredUsersFilePath() {
   return path.join(__dirname, 'registered_users.json');
 }
 
-// Helper function to load registered users from file
 function loadRegisteredUsers() {
   const filePath = getRegisteredUsersFilePath();
   if (fs.existsSync(filePath)) {
@@ -38,13 +51,11 @@ function loadRegisteredUsers() {
   return [];
 }
 
-// Helper function to save registered users to file
 function saveRegisteredUsers(users) {
   const filePath = getRegisteredUsersFilePath();
   fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
 }
 
-// Get the host's actual IPv4 address
 function getHostIpAddress() {
   const networkInterfaces = os.networkInterfaces();
   for (const iface of Object.values(networkInterfaces)) {
@@ -59,34 +70,62 @@ function getHostIpAddress() {
 
 const hostIp = getHostIpAddress(); // Get host IPv4 address once
 
-// Helper function to get or create a file path for messages between two IPs
-function getMessageFilePath(fromIp, toIp) {
-  const sortedIps = [fromIp, toIp].sort();
-  const fileName = `${sortedIps[0]}_to_${sortedIps[1]}.json`;
-  const filePath = path.join(__dirname, 'messages', fileName);
+function getChatFolderPath(fromIp, toIp) {
+  const sortedIps = [fromIp, toIp].sort(); // Sort IPs to ensure consistent directory naming
+  const folderName = `${sortedIps[0]}_to_${sortedIps[1]}`;
+  const folderPath = path.join(__dirname, 'chats', folderName);
 
-  if (!fs.existsSync(path.dirname(filePath))) {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  try {
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+      console.log(`Created chat folder: ${folderPath}`);
+    }
+
+    const attachmentsFolderPath = path.join(folderPath, 'attachments');
+    if (!fs.existsSync(attachmentsFolderPath)) {
+      fs.mkdirSync(attachmentsFolderPath, { recursive: true });
+      console.log(`Created attachments folder: ${attachmentsFolderPath}`);
+    }
+
+    return folderPath;
+  } catch (error) {
+    console.error(`Error creating chat folder: ${error.message}`);
+    throw error;
   }
-
-  return filePath;
 }
 
-// Helper function to save a message to a file
+
+
 function saveMessage(fromIp, toIp, message) {
-  const filePath = getMessageFilePath(fromIp, toIp);
+  const chatFolderPath = getChatFolderPath(fromIp, toIp);
+  const messagesFilePath = path.join(chatFolderPath, 'messages.json');
 
   let messages = [];
-  if (fs.existsSync(filePath)) {
-    const fileContent = fs.readFileSync(filePath);
+  if (fs.existsSync(messagesFilePath)) {
+    const fileContent = fs.readFileSync(messagesFilePath);
     messages = JSON.parse(fileContent);
   }
 
+  if (message.attachments) {
+    message.attachments = message.attachments.map(file => {
+      const relativePath = `${getChatFolderPath(fromIp, toIp)}/attachments/${file.name}`;
+      return {
+        originalName: file.originalName,
+        filePath: relativePath
+      };
+    });
+  }
+
   messages.push(message);
-  fs.writeFileSync(filePath, JSON.stringify(messages, null, 2));
+  fs.writeFileSync(messagesFilePath, JSON.stringify(messages, null, 2));
 }
 
-// Update the list of registered users based on connection status
+
+
+
+
+
+
 function updateRegisteredUsers(userIp) {
   const registeredUsers = loadRegisteredUsers();
   let user = registeredUsers.find(u => u.ip === userIp);
@@ -99,6 +138,15 @@ function updateRegisteredUsers(userIp) {
 
 function removeDuplicateIps(ips) {
   return [...new Set(ips)];
+}
+
+function getSocketIdByUserIp(userIp) {
+  for (const [socketId, ip] of Object.entries(users)) {
+    if (ip === userIp) {
+      return socketId;
+    }
+  }
+  return null;
 }
 
 io.on('connection', (socket) => {
@@ -133,17 +181,104 @@ io.on('connection', (socket) => {
   socket.on('requestChatLog', (chatWithIp) => {
     const userIp = users[socket.id];
     if (userIp) {
-      const filePath = getMessageFilePath(userIp, chatWithIp);
-      if (fs.existsSync(filePath)) {
-        const fileContent = fs.readFileSync(filePath);
+      const chatFolderPath = getChatFolderPath(userIp, chatWithIp);
+      const messagesFilePath = path.join(chatFolderPath, 'messages.json');
+      if (fs.existsSync(messagesFilePath)) {
+        const fileContent = fs.readFileSync(messagesFilePath);
         const chatLog = JSON.parse(fileContent);
+  
+        // Process attachments
+        chatLog.forEach(message => {
+          if (message.attachments) {
+            message.attachments = message.attachments.map(file => {
+              return {
+                originalName: file.originalName,
+                filePath: file.filePath // Already includes uniqueFilename
+              };
+            });
+          }
+        });
+  
         socket.emit('receiveChatLog', chatLog);
       } else {
         socket.emit('receiveChatLog', []);
       }
     }
   });
+  
+  
+  
 
+  // Handle message with attachments
+  socket.on('sendMessageWithAttachments', (data) => {
+    const { attachments, ...logData } = data;
+    console.log('Attachments:', attachments.map(file => file.name));
+  
+    try {
+      if (!data.from || !data.to || !data.attachments) {
+        throw new Error('Invalid data: Missing "from", "to", or "attachments"');
+      }
+  
+      const chatFolderPath = getChatFolderPath(data.from, data.to);
+      const processedAttachments = data.attachments.map((file, index) => {
+        if (!file.name || !file.base64Content) {
+          throw new Error(`Invalid file data for ${file.name}`);
+        }
+  
+        // Extract base64 content (after 'base64,' prefix)
+        let base64Content;
+        if (file.base64Content.includes('base64,')) {
+          base64Content = file.base64Content.split('base64,')[1];
+        } else {
+          base64Content = file.base64Content;
+        }
+        if (!base64Content) {
+          throw new Error(`Base64 content missing for ${file.name}`);
+        }
+  
+        // Decode base64 content
+        const fileContent = Buffer.from(base64Content, 'base64');
+  
+        // Generate unique filename and save file
+        const fileExtension = path.extname(file.name);
+        const uniqueFilename = `${Date.now()}_${index}${fileExtension}`;
+        const filePath = path.join(chatFolderPath, 'attachments', uniqueFilename);
+  
+        // Write file to disk
+        fs.writeFileSync(filePath, fileContent);
+  
+        // Return the details of the saved file including original name
+        return {
+          name: uniqueFilename, // Use uniqueFilename
+          originalName: file.name,
+          filePath: `attachments/${uniqueFilename}` // Relative path including uniqueFilename
+        };
+      });
+  
+      // Update the attachments in the data
+      data.attachments = processedAttachments;
+  
+      // Emit the message to the recipient
+      const recipientSocketId = getSocketIdByUserIp(data.to);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('receiveMessage', data);
+      }
+  
+      // Save the message
+      saveMessage(data.from, data.to, data);
+  
+    } catch (error) {
+      console.error('Error handling message with attachments:', error.message);
+      socket.emit('error', { message: 'Failed to send message with attachments.' });
+    }
+  });
+  
+  
+
+  
+  
+
+  // Handle simple message without attachments
   socket.on('sendMessage', (message) => {
     console.log('Message received:', message);
     message.from = users[socket.id];
@@ -153,7 +288,6 @@ io.on('connection', (socket) => {
       io.to(recipientSocketId).emit('receiveMessage', message);
     }
 
-    // Save the message regardless of recipient's online status
     saveMessage(message.from, message.to, message);
   });
 
@@ -173,11 +307,25 @@ io.on('connection', (socket) => {
   });
 });
 
-function getSocketIdByUserIp(userIp) {
-  for (const [socketId, ip] of Object.entries(users)) {
-    if (ip === userIp) {
-      return socketId;
-    }
+// Handle file uploads with multer
+app.get('/download/:filePath', (req, res) => {
+  const filePath = path.join(__dirname, 'chats', req.params.filePath);
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).json({ error: 'File not found' });
   }
-  return null;
-}
+});
+
+app.post('/upload', upload.array('files'), (req, res) => {
+  if (!req.files) {
+    return res.status(400).json({ error: 'No files were uploaded.' });
+  }
+
+  const files = req.files.map(file => ({
+    originalname: file.originalname,
+    filename: file.filename,
+  }));
+
+  res.json({ files });
+});
