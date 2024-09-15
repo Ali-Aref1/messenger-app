@@ -4,6 +4,7 @@ import { TopBar } from './components/TopBar';
 import { Contacts } from './components/Contacts';
 import { SocketProvider } from './SocketContext';
 import { useState } from 'react';
+import React from 'react';
 
 function App() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);

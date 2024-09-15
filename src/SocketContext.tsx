@@ -28,7 +28,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Listen for client list updates
     socket.on('updateClients', (clientList: string[]) => {
-      console.log('Received client list:', clientList);
     });
 
     return () => {

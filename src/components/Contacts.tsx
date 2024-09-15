@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSocket } from '../SocketContext';
 import { Spinner, Box, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
-
-interface User {
-  ip: string;
-  name: string;
-}
+import User from '../interfaces/User';
 
 interface ContactsProps {
   selectedContact: string | null;
