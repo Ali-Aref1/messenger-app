@@ -214,13 +214,12 @@ io.on('connection', (socket) => {
       // Save the message only if there are no attachments
       if (!message.attachments || message.attachments.length === 0) {
         saveMessage(message);
+        const socketId = getSocketIdByUserIp(message.to);
+        if (socketId) {
+          io.to(socketId).emit('receiveMessage', message);
+        }
       }
-  
-      // Emit the message to the intended recipient
-      const socketId = getSocketIdByUserIp(message.to);
-      if (socketId) {
-        io.to(socketId).emit('receiveMessage', message);
-      }
+
     }
   });
   

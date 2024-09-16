@@ -308,8 +308,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
         </Modal>
 
       </div>
-
-      <div className="w-full h-fit p-2 border-black border-t-2 flex gap-2">
+      {
+      selectedChat && <div className="w-full h-fit p-2 border-black border-t-2 flex gap-2">
         {fileObjects.length > 0 && fileObjects.map((file, index) => {
           return (
             <div key={index} className='relative flex flex-col h-fit gap-2 items-center bg-slate-600 rounded-lg p-2'>
@@ -357,7 +357,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
         >
           Send
         </button>
-      </div>
+      </div>}
     </div>
+    
   );
 };
