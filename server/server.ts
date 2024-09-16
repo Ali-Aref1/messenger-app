@@ -209,7 +209,7 @@ io.on('connection', (socket) => {
   socket.on('sendMessage', (message: Message) => {
     const userIp = users[socket.id];
     if (userIp) {
-      // Save the message if there are no attachments
+      // Save the message only if there are no attachments
       if (!message.attachments || message.attachments.length === 0) {
         saveMessage(message);
       }
@@ -221,6 +221,7 @@ io.on('connection', (socket) => {
       }
     }
   });
+  
   
 
   socket.on('disconnect', () => {
@@ -260,8 +261,10 @@ app.post('/upload', upload.array('files'), (req, res) => {
     io.to(recipientSocketId).emit('receiveMessage', updatedMessage);
   }
 
-  res.sendStatus(200);
+  // Respond with the updated message
+  res.status(200).json({ message: updatedMessage });
 });
+
 
 
 

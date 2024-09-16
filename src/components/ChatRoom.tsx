@@ -27,6 +27,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const chatBoxRef = useRef<HTMLDivElement | null>(null);
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
+  const imageRefs = useRef<{ [key: number]: HTMLImageElement | null }>({});
 
   const getDirectoryPath = (userIp: string, chatIp: string): string => {
     const sortedIps = [userIp, chatIp].sort();
@@ -80,10 +81,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       // Clear current messages
       setMessages([]);
       setScrollToBottom(true);
-
+  
       // Request chat log from the server
       getChatLog();
-
+  
       socket.on('receiveChatLog', (chatLog: Message[]) => {
         setMessages(chatLog.map(msg => ({
           ...msg,
@@ -91,9 +92,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
         })));
         setScrollToBottom(true); // Ensure scroll to bottom when chat log is received
       });
-
+  
       // Listen for live messages
       socket.on('receiveMessage', (message: Message) => {
+        console.log('Received message:', message);
         if (message.from === selectedChat || message.to === selectedChat) {
           setMessages(prevMessages => [...prevMessages, message]);
           // Determine if we need to scroll based on who sent the message
@@ -107,7 +109,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
           }
         }
       });
-
+  
       // Clean up socket listeners on unmount or when selectedChat changes
       return () => {
         socket.off('receiveChatLog');
@@ -115,11 +117,37 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       };
     }
   }, [socket, selectedChat]);
+  
 
   useEffect(() => {
-    scrollToBottomIfNeeded(); // Scroll to bottom when messages are updated or chat is changed
-  }, [messages, scrollToBottom]);
+    if (scrollToBottom) {
+      scrollToBottomIfNeeded();
+      setScrollToBottom(false);
+    }
+  }, [scrollToBottom]);
+  
 
+  useEffect(() => {
+    const handleImageLoad = (event: Event) => {
+      const image = event.target as HTMLImageElement;
+      if (image.complete) {
+        scrollToBottomIfNeeded();
+      }
+    };
+  
+    const imageElements = document.querySelectorAll('img[data-auto-scroll]');
+    imageElements.forEach(image => {
+      image.addEventListener('load', handleImageLoad);
+    });
+  
+    return () => {
+      imageElements.forEach(image => {
+        image.removeEventListener('load', handleImageLoad);
+      });
+    };
+  }, [messages]);  // Run this effect when `messages` change
+  
+  
   const getChatLog = (): void => {
     if (socket && selectedChat) {
       setMessages([]);
@@ -129,7 +157,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
 
   const sendMessage = async () => {
     if ((msg.trim() === '' && fileObjects.length === 0) || !selectedChat || !userIp) return;
-
+  
     const formData = new FormData();
     formData.append('message', JSON.stringify({
       text: msg,
@@ -138,29 +166,37 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       to: selectedChat,
       attachments: fileObjects.map(file => ({ name: file.name })), // Only name is used for now
     }));
-
+  
     fileObjects.forEach(file => {
       formData.append('files', file);
     });
-
+  
     if (fileObjects.length > 0) {
       try {
-        await fetch('/upload', {
+        console.log('Uploading files...');
+        const response = await fetch('/upload', {
           method: 'POST',
           body: formData,
         });
-        const newMessage = {
-          text: msg,
-          sent: new Date(),
-          from: userIp,
-          to: selectedChat,
-          attachments: fileObjects.length > 0 ? fileObjects.map(file => ({ name: file.name, path: null })) : null, // Add relative path
-        };
+  
+        // Log the response status and any response data
+        console.log('Upload response status:', response.status);
+        const responseData = await response.json();
+        console.log('Upload response data:', responseData);
+  
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+  
+        console.log('Files uploaded successfully');
+        const newMessage = responseData.message;
+  
+        console.log('Sending message:', newMessage);
         setMessages(prevMessages => [...prevMessages, newMessage]);
         socket?.emit('sendMessage', newMessage);
         setMsg('');
         setFileObjects([]); // Clear file objects after sending
-        setScrollToBottom(true);
+        setScrollToBottom(true); // Trigger scroll to bottom
       } catch (error) {
         console.error('Error sending message:', error);
       }
@@ -172,13 +208,17 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
         to: selectedChat,
         attachments: null,
       };
+      console.log('Sending message:', newMessage);
       setMessages(prevMessages => [...prevMessages, newMessage]);
       socket?.emit('sendMessage', newMessage);
       setMsg('');
       setFileObjects([]); // Clear file objects after sending
-      setScrollToBottom(true);
+      setScrollToBottom(true); // Trigger scroll to bottom
     }
   };
+  
+  
+  
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -205,20 +245,21 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
                   message.from === userIp ? "self-end bg-sky-600 text-white" : "self-start bg-slate-300"
                 }`}
               >
-                {message.text}
+                
                 {message.attachments && message.attachments.length > 0 && (
-                  <div>
+                    <div>
                     {message.attachments.map((attachment, idx) => (
                       <div key={idx} className="my-2">
                         {isImageFile(attachment.name) ? (
                           (attachment.path
                             ? <img
-                              src={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat)}/${attachment.path}`}
-                              className="w-full h-fit max-w-80 object-cover rounded-md cursor-pointer"
-                              onClick={() => handleImageClick(`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat)}/${attachment.path}`)}
-                              alt={attachment.name}
-                            />
-                            : <div className='w-fit h-fit max-w-80 object-cover rounded-md bg-gray-950'><Spinner></Spinner></div>
+                                src={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat)}/${attachment.path}`}
+                                className="w-full h-fit max-w-80 object-cover rounded-md cursor-pointer"
+                                data-auto-scroll
+                                onClick={() => handleImageClick(`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat)}/${attachment.path}`)}
+                                alt={attachment.name}
+                              />
+                            : <div className='w-80 h-80 max-w-80 object-cover rounded-md bg-gray-950'><Spinner></Spinner></div>
                           )
                         ) : (
                           <div className="flex items-center">
@@ -240,6 +281,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
                     ))}
                   </div>
                 )}
+
+
+
+                {message.text}
                 <div className="text-xs text-gray-500 text-right">
                   {sentDate.toLocaleTimeString()}
                 </div>
