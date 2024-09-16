@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"vite --host\" \"nodemon --watch server --ext ts,tsx --exec tsx server/server.ts\"",
+    "start":"concurrently \"nodemon --watch server --ext ts,tsx --exec tsx index.ts\" \"nodemon --watch server --ext ts,tsx --exec tsx server/server.ts\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -23,6 +24,7 @@
     "react-dom": "^18.3.1",
     "react-firebase-hooks": "^5.1.1",
     "react-i18next": "^15.0.1",
+    "serve": "^14.2.3",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5"
   },

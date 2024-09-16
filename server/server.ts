@@ -22,7 +22,7 @@ const io = new Server(server, {
 
 const serverPort = process.env.YOUR_PORT || process.env.PORT || 4000;
 server.listen(Number(serverPort), '0.0.0.0', () => {
-  console.log('Listening on port ' + serverPort);
+  console.log('Server listening on port ' + serverPort);
 });
 
 const users: { [key: string]: string } = {}; // { socketId: userIp }
