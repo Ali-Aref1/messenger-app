@@ -242,7 +242,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
               <div
                 key={index}
                 className={`p-2 w-fit max-w-[30vw] rounded-2xl mx-2 my-2 text-wrap ${
-                  message.from === userIp ? "self-end bg-sky-600 text-white" : "self-start bg-slate-300"
+                  message.from === userIp ? "self-end bg-sky-600 text-white" : "self-start bg-slate-300 text-gray-800"
                 }`}
               >
                 
