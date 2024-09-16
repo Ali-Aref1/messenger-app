@@ -92,7 +92,6 @@ const hostIp = getHostIpAddress(); // Get host IPv4 address once
 
 function getChatFolderPath(fromIp: string, toIp: string): string {
   if (!fromIp || !toIp) {
-    console.log(fromIp, toIp);
     throw new Error('Invalid IP addresses provided.');
   }
   const sortedIps = [fromIp, toIp].sort(); // Sort IPs to ensure consistent directory naming
@@ -166,8 +165,12 @@ io.on('connection', (socket) => {
   } else if (userIp.includes(',')) {
     userIp = userIp.split(',').find(ip => !ip.includes(':'))?.trim() || '';
   }
+  const user = loadRegisteredUsers().find(u => u.ip === userIp);
+  const userName = user ? user.name : 'Unknown User';
+  const userInfo = { name: userName, ip: userIp, socketId: socket.id };
 
-  console.log('New user connected: ' + socket.id + ' with IP: ' + userIp);
+  console.log('New user connected:');
+  console.log(userInfo);
   socket.emit('receiveIp', userIp);
   users[socket.id] = userIp;
 
@@ -191,7 +194,6 @@ io.on('connection', (socket) => {
     const userIp = users[socket.id];
     if (userIp) {
       const chatFolderPath = getChatFolderPath(userIp, chatWithIp);
-      console.log(chatFolderPath);
       const messagesFilePath = path.resolve(chatFolderPath, 'messages.json'); // Use path.resolve instead of __dirname
       if (fs.existsSync(messagesFilePath)) {
         const fileContent = fs.readFileSync(messagesFilePath);
@@ -225,7 +227,11 @@ io.on('connection', (socket) => {
   
 
   socket.on('disconnect', () => {
-    console.log('User disconnected: ' + socket.id);
+    const user = loadRegisteredUsers().find(u => u.ip === userIp);
+    const userName = user ? user.name : 'Unknown User';
+    const userInfo = { name: userName, ip: userIp, socketId: socket.id };
+    console.log('User disconnected: ');
+    console.log(userInfo);
     delete users[socket.id];
 
     const onlineUsers = removeDuplicateIps(Object.values(users));
