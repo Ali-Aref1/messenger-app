@@ -39,7 +39,7 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
   return (
     <div className='relative mx-4 h-[88vh] mt-4 flex flex-col bg-slate-500 items-center p-4'>
       <button
-        className={`mx-4 ${isContactsOpen ? 'rounded-full' : 'rounded-xl'} bg-slate-400 h-20 w-full transition-all duration-500`}
+        className={`mx-4 rounded-full bg-slate-400 h-20 w-full transition-all duration-500`}
         onClick={() => setIsContactsOpen(!isContactsOpen)}
       >
         Contacts
