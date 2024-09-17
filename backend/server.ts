@@ -29,8 +29,8 @@ const users: { [key: string]: string } = {}; // { socketId: userIp }
 // Middleware
 app.use(cors());
 app.use(express.json()); // For parsing application/json
-app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
-app.use('/attachments', express.static(path.resolve('server/chats'))); // Serve static files from the 'server/chats' directory
+app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded'
+app.use('/attachments', express.static(path.resolve('chats'))); // Serve static files
 
 // Set up multer for file handling
 const storage = multer.diskStorage({
@@ -62,7 +62,7 @@ interface Message {
 // Helper functions
 
 function loadRegisteredUsers(): any[] {
-  const filePath = path.resolve('server/registered_users.json');
+  const filePath = path.resolve('registered_users.json');
   if (fs.existsSync(filePath)) {
     const fileContent = fs.readFileSync(filePath);
     return JSON.parse(fileContent.toString());
@@ -71,7 +71,7 @@ function loadRegisteredUsers(): any[] {
 }
 
 function saveRegisteredUsers(users: any[]): void {
-  const filePath = path.resolve('server/registered_users.json');
+  const filePath = path.resolve('registered_users.json');
   fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
 }
 
@@ -95,7 +95,7 @@ function getChatFolderPath(fromIp: string, toIp: string): string {
   }
   const sortedIps = [fromIp, toIp].sort(); // Sort IPs to ensure consistent directory naming
   const folderName = `${sortedIps[0]}_to_${sortedIps[1]}`;
-  const folderPath = path.resolve('server/chats', folderName); // Use path.resolve instead of __dirname
+  const folderPath = path.resolve('chats', folderName); // Use path.resolve instead of __dirname
 
   try {
     if (!fs.existsSync(folderPath)) {
@@ -268,6 +268,11 @@ app.post('/upload', upload.array('files'), (req, res) => {
   // Respond with the updated message
   res.status(200).json({ message: updatedMessage });
 });
+
+app.get('/test', (req, res) => {
+  res.send('Test route is working!');
+});
+
 
 
 
