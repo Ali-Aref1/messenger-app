@@ -1,2 +1,2 @@
 echo Starting the Chat App...
-start "Chat App" cmd /k "npm run dev"
+start "Chat App" cmd /k "npm run startall"

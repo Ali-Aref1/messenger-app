@@ -6,7 +6,6 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
-import { log } from 'console';
 
 const app = express();
 app.use(express.json());
@@ -17,7 +16,7 @@ const io = new Server(server, {
   cors: {
     methods: ['GET', 'POST'],
   },
-  maxHttpBufferSize: 8e8, // 500 MB
+  maxHttpBufferSize: 5e8, // 500 MB
 });
 
 const serverPort = process.env.YOUR_PORT || process.env.PORT || 4000;

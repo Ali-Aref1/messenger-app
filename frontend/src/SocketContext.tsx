@@ -27,13 +27,10 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     socket.on('receiveIp', handleReceiveIp);
 
     // Listen for client list updates
-    socket.on('updateClients', (clientList: string[]) => {
-    });
 
     return () => {
       socket.off('connect');
       socket.off('receiveIp');
-      socket.off('updateClients');
     };
   }, []);
 

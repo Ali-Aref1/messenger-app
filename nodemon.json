@@ -1,6 +1,0 @@
-{
-    "watch": ["server"],
-    "ext": "ts",
-    "exec": "npx ts-node server/server.ts"
-  }
-  

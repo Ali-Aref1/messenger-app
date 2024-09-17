@@ -1,10 +1,9 @@
 import { ChatRoom } from './components/ChatRoom';
-import { ChakraProvider, Center, Flex } from '@chakra-ui/react';
+import { ChakraProvider, Center } from '@chakra-ui/react';
 import { TopBar } from './components/TopBar';
 import { Contacts } from './components/Contacts';
 import { SocketProvider } from './SocketContext';
 import { useState } from 'react';
-import React from 'react';
 
 function App() {
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
