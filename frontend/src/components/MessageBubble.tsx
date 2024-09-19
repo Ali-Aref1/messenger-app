@@ -36,7 +36,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
                 <div className="flex items-center">
                   <a
                     href={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat)}/${attachment.path}`}
-                    download
+                    download={attachment.name}
                     className="flex items-center space-x-2"
                   >
                     <img
