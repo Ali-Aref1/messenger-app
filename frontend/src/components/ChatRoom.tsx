@@ -203,7 +203,8 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
           ))}
         </div>
       )}
-    
+      {selectedChat&&(
+        <>
       <MessageInput
         msg={msg}
         setMsg={setMsg}
@@ -218,6 +219,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
         selectedImage={selectedImage}
         onClose={() => setIsImageModalOpen(false)}
       />
+      </>
+      )
+      }
     </div>
     ); };
 
