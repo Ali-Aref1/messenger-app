@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, ChangeEvent } from 'react';
+import { FormatDate, getTimeDifference } from '../utils';
 import { useSocket } from '../SocketContext';
 import MessageBubble from './MessageBubble';
 import MessageInput from './MessageInput';
@@ -142,6 +143,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       getChatLog();
   
       socket.on('receiveChatLog', (chatLog: Message[]) => {
+        chatLog.forEach((msg,index) => {
+          if(index>0) console.log(getTimeDifference(new Date(msg.sent), new Date()))
+        });
         setMessages(chatLog.map(msg => ({
           ...msg,
           sent: typeof msg.sent === 'string' ? new Date(msg.sent) : msg.sent,
@@ -178,16 +182,29 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
     <div className="relative rounded-2xl border-2 border-black w-full h-[90vh] flex flex-col mx-4 overflow-hidden">
       <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
         {selectedChat ? messages.map((message, index) => (
-          <MessageBubble
-            key={index}
-            message={message}
-            userIp={userIp || ''}
-            selectedChat={selectedChat}
-            handleImageClick={(imageUrl) => {
-              setSelectedImage(imageUrl);
-              setIsImageModalOpen(true);
-            }}
-          />
+          <div key={index}>
+            {
+            (index == 0 || new Date(messages[index - 1].sent).toLocaleDateString() !== new Date(message.sent).toLocaleDateString()) &&
+                <div className='w-full flex items-center justify-center bg-slate-300 mt-2 mb-4' style={{ boxShadow: '0 0 2px 10px #cbd5e1' }}><div className='bg-slate-700 rounded-full p-2 text-white'>
+                  {
+                    getTimeDifference(new Date(message.sent), new Date()) === 0
+                      ? 'Today'
+                      : getTimeDifference(new Date(message.sent), new Date()) === 1
+                      ? 'Yesterday'
+                      : FormatDate(new Date(message.sent))
+                  }
+                  </div></div>
+            }
+            <MessageBubble
+              message={message}
+              userIp={userIp || ''}
+              selectedChat={selectedChat}
+              handleImageClick={(imageUrl) => {
+                setSelectedImage(imageUrl);
+                setIsImageModalOpen(true);
+              }}
+            />
+          </div>
         )) : <p className="text-center">Please select a chat room.</p>}
       </div>
     

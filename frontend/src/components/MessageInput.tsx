@@ -30,7 +30,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ msg, setMsg, sendMessage, h
       <input
         type="text"
         value={msg}
-        onChange={(e) => {setMsg(e.target.value);}}
+        onChange={(e) => {setMsg(e.target.value); }}
         onKeyDown={handleKeyPress}
         placeholder="Type a message..."
         className="flex-1 p-2 border rounded"

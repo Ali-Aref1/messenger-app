@@ -53,7 +53,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
         </div>
       )}
       {message.text}
-      <div className="text-xs text-gray-500 text-right">
+      <div className={`text-xs text-right opacity-50 ${message.from === userIp ? "text-white" : "text-gray-800"}`}>
         {sentDate.toLocaleTimeString()}
       </div>
     </div>

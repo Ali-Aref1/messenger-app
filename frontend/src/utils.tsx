@@ -29,3 +29,18 @@ export const getDirectoryPath = (userIp: string, chatIp: string): string => {
     const sortedIps = [userIp, chatIp].sort();
     return `${sortedIps[0]}_to_${sortedIps[1]}`;
   };
+export const FormatDate = (date: Date): string => {
+const day = String(date.getDate()); // Get day and add leading zero if needed
+const month = String(date.getMonth() + 1); // Get month (getMonth() is zero-indexed)
+const year = date.getFullYear(); // Get the full year
+
+const formattedDate = `${day}/${month}/${year}`;
+return formattedDate;
+}
+
+export const getTimeDifference = (date1: Date, date2: Date): number => {
+  const startOfDay1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
+  const startOfDay2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
+  const timeDifference = startOfDay2.getTime() - startOfDay1.getTime();
+  return timeDifference / (1000 * 60 * 60 * 24);
+}
