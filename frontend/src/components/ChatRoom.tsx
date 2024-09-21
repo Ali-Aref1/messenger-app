@@ -6,17 +6,9 @@ import MessageInput from './MessageInput';
 import FilePreview from './FilePreview';
 import ImageModal from './ImageModal';
 import Message from '../interfaces/Message';
-import User from '../interfaces/User';
+import { useClientContext } from '../ClientContext';
 
-interface ChatRoomProps {
-  selectedChat: User | null;
-  onlineClients: User[];
-  offlineClients: User[];
-  setOnlineClients: React.Dispatch<React.SetStateAction<User[]>>;
-  setOfflineClients: React.Dispatch<React.SetStateAction<User[]>>;
-}
-
-export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
+export const ChatRoom: React.FC = () => {
   const [msg, setMsg] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const { socket, userIp } = useSocket();
@@ -26,6 +18,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const chatBoxRef = useRef<HTMLDivElement | null>(null);
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
+  const { selectedContact } = useClientContext();
 
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -36,9 +29,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
     }
   };
   const getChatLog = (): void => {
-    if (socket && selectedChat) {
+    if (socket && selectedContact) {
       setMessages([]);
-      socket.emit('requestChatLog', selectedChat.ip);
+      socket.emit('requestChatLog', selectedContact.ip);
     }
   };
   const scrollToBottomIfNeeded = () => {
@@ -78,14 +71,14 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   }, [messages]);  // Run this effect when `messages` change
 
   const sendMessage = async () => {
-    if ((msg.trim() === '' && fileObjects.length === 0) || !selectedChat || !userIp) return;
+    if ((msg.trim() === '' && fileObjects.length === 0) || !selectedContact || !userIp) return;
   
     const formData = new FormData();
     formData.append('message', JSON.stringify({
       text: msg,
       sent: new Date(),
       from: userIp,
-      to: selectedChat.ip,
+      to: selectedContact.ip,
       attachments: fileObjects.map(file => ({ name: file.name })), // Only name is used for now
     }));
   
@@ -127,7 +120,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
         text: msg,
         sent: new Date(),
         from: userIp,
-        to: selectedChat.ip,
+        to: selectedContact.ip,
         attachments: null,
       };
       console.log('Sending message:', newMessage);
@@ -140,7 +133,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   };
 
   useEffect(() => {
-    if (socket && selectedChat) {
+    if (socket && selectedContact) {
       // Clear current messages
       setMessages([]);
       setScrollToBottom(true);
@@ -159,7 +152,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       // Listen for live messages
       socket.on('receiveMessage', (message: Message) => {
         console.log('Received message:', message);
-        if (message.from === selectedChat.ip || message.to === selectedChat.ip) {
+        if (message.from === selectedContact.ip || message.to === selectedContact.ip) {
           setMessages(prevMessages => [...prevMessages, message]);
           // Determine if we need to scroll based on who sent the message
           if (message.from === userIp) {
@@ -173,20 +166,20 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
         }
       });
   
-      // Clean up socket listeners on unmount or when selectedChat changes
+      // Clean up socket listeners on unmount or when selectedContact changes
       return () => {
         socket.off('receiveChatLog');
         socket.off('receiveMessage');
       };
     }
-  }, [socket, selectedChat]);
+  }, [socket, selectedContact]);
 
   return (
     <div className='flex flex-col w-full mx-4 bg-slate-500 rounded-2xl p-2'>
-    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)]'>{selectedChat?.name}</div>
+    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)]'>{selectedContact?.name}</div>
     <div className="relative rounded-2xl border-2w-full h-full flex flex-col overflow-hidden bg-white">
       <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
-        {selectedChat ? messages.map((message, index) => (
+        {selectedContact ? messages.map((message, index) => (
           <div key={index} className={`${message.from==userIp?"self-end":""}`}>
             {
             (index == 0 || new Date(messages[index - 1].sent).toLocaleDateString() !== new Date(message.sent).toLocaleDateString()) &&
@@ -203,7 +196,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
             <MessageBubble
               message={message}
               userIp={userIp || ''}
-              selectedChat={selectedChat}
+              selectedContact={selectedContact}
               handleImageClick={(imageUrl) => {
                 setSelectedImage(imageUrl);
                 setIsImageModalOpen(true);
@@ -225,7 +218,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
           ))}
         </div>
       )}
-      {selectedChat&&(
+      {selectedContact&&(
         <>
       <MessageInput
         msg={msg}

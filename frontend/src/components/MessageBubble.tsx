@@ -7,11 +7,11 @@ import User from '../interfaces/User';
 interface MessageBubbleProps {
   message: Message;
   userIp: string;
-  selectedChat: User;
+  selectedContact: User;
   handleImageClick: (imageUrl: string) => void;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selectedChat, handleImageClick }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selectedContact, handleImageClick }) => {
   const sentDate = typeof message.sent === 'string' ? new Date(message.sent) : message.sent;
 
   return (
@@ -25,10 +25,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
               {isImageFile(attachment.name) ? (
                 (attachment.path
                   ? <img
-                      src={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat.ip)}/${attachment.path}`}
+                      src={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedContact.ip)}/${attachment.path}`}
                       className="w-full h-fit max-w-80 object-cover rounded-md cursor-pointer"
                       data-auto-scroll
-                      onClick={() => handleImageClick(`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat.ip)}/${attachment.path}`)}
+                      onClick={() => handleImageClick(`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedContact.ip)}/${attachment.path}`)}
                       alt={attachment.name}
                     />
                   : <div className='w-80 h-80 max-w-80 object-cover rounded-md bg-gray-950'><Spinner /></div>
@@ -36,7 +36,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
               ) : (
                 <div className="flex items-center">
                   <a
-                    href={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat.ip)}/${attachment.path}`}
+                    href={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedContact.ip)}/${attachment.path}`}
                     download={attachment.name}
                     className="flex items-center space-x-2"
                   >

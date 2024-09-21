@@ -2,19 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useSocket } from '../SocketContext';
 import { Spinner, Box, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 import User from '../interfaces/User';
+import { useClientContext } from '../ClientContext';
 
-interface ContactsProps {
-  onlineClients: User[];
-  setOnlineClients: React.Dispatch<React.SetStateAction<User[]>>;
-  offlineClients: User[];
-  setOfflineClients: React.Dispatch<React.SetStateAction<User[]>>;
-  selectedContact: User | null;
-  setSelectedContact: (contactId: User | null) => void;
-}
 
-export const Contacts: React.FC<ContactsProps> = ({onlineClients, setOnlineClients, offlineClients, setOfflineClients, selectedContact, setSelectedContact }) => {
+export const Contacts: React.FC = () => {
   const [isContactsOpen, setIsContactsOpen] = useState<boolean>(false);
-
+  const { selectedContact, setSelectedContact, onlineClients, setOnlineClients, offlineClients, setOfflineClients } = useClientContext();
 
   const { socket, userIp } = useSocket();
   {/*test*/}
@@ -41,7 +34,7 @@ export const Contacts: React.FC<ContactsProps> = ({onlineClients, setOnlineClien
   }, [socket, userIp]);
 
   return (
-    <div className='relative mx-4 h-full mt-4 flex flex-col bg-slate-500 items-center p-4'>
+    <div className='relative mx-4 h-full flex flex-col bg-slate-500 items-center p-4 rounded-xl'>
       <button
         className={`mx-4 rounded-full bg-slate-400 h-20 w-full transition-all duration-500`}
         onClick={() => {setIsContactsOpen(!isContactsOpen);}}
