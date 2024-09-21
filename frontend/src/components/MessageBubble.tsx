@@ -2,11 +2,12 @@ import React from 'react';
 import { Spinner } from '@chakra-ui/react';
 import Message from '../interfaces/Message';
 import { getFileIcon, isImageFile, getDirectoryPath } from '../utils';
+import User from '../interfaces/User';
 
 interface MessageBubbleProps {
   message: Message;
   userIp: string;
-  selectedChat: string;
+  selectedChat: User;
   handleImageClick: (imageUrl: string) => void;
 }
 
@@ -15,7 +16,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
 
   return (
     <div
-      className={`p-2 w-fit max-w-[30vw] rounded-2xl mx-2 my-2 text-wrap ${message.from === userIp ? "self-end bg-sky-600 text-white" : "self-start bg-slate-300 text-gray-800"}`}
+      className={`p-2 w-fit max-w-[30vw] rounded-2xl mx-2 my-2 text-wrap ${message.from === userIp ? "bg-sky-600 text-white" : "bg-slate-300 text-gray-800"}`}
     >
       {message.attachments && message.attachments.length > 0 && (
         <div>
@@ -24,10 +25,10 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
               {isImageFile(attachment.name) ? (
                 (attachment.path
                   ? <img
-                      src={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat)}/${attachment.path}`}
+                      src={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat.ip)}/${attachment.path}`}
                       className="w-full h-fit max-w-80 object-cover rounded-md cursor-pointer"
                       data-auto-scroll
-                      onClick={() => handleImageClick(`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat)}/${attachment.path}`)}
+                      onClick={() => handleImageClick(`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat.ip)}/${attachment.path}`)}
                       alt={attachment.name}
                     />
                   : <div className='w-80 h-80 max-w-80 object-cover rounded-md bg-gray-950'><Spinner /></div>
@@ -35,7 +36,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
               ) : (
                 <div className="flex items-center">
                   <a
-                    href={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat)}/${attachment.path}`}
+                    href={`http://${window.location.hostname}:4000/attachments/${getDirectoryPath(userIp || '', selectedChat.ip)}/${attachment.path}`}
                     download={attachment.name}
                     className="flex items-center space-x-2"
                   >

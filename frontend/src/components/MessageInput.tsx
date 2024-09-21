@@ -19,7 +19,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ msg, setMsg, sendMessage, h
   };
 
   return (
-    <div className="w-full h-fit p-2 border-black border-t-2 flex gap-2">
+    <div className="w-full h-fit p-2 border-slate-500 bg-slate-300 border-t-4 flex gap-2">
       <input
         type="file"
         multiple
@@ -33,7 +33,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ msg, setMsg, sendMessage, h
         onChange={(e) => {setMsg(e.target.value); }}
         onKeyDown={handleKeyPress}
         placeholder="Type a message..."
-        className="flex-1 p-2 border rounded"
+        className="flex-1 p-2 border-2 border-gray-400 rounded"
       />
       <button onClick={() => fileInputRef.current?.click()} className="bg-blue-500 text-white rounded px-4 py-2">
         <img src={attachIcon} alt="Attach" className="w-6 h-6" />

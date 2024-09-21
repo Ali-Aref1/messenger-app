@@ -4,14 +4,18 @@ import { Spinner, Box, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-u
 import User from '../interfaces/User';
 
 interface ContactsProps {
-  selectedContact: string | null;
-  setSelectedContact: (contactId: string | null) => void;
+  onlineClients: User[];
+  setOnlineClients: React.Dispatch<React.SetStateAction<User[]>>;
+  offlineClients: User[];
+  setOfflineClients: React.Dispatch<React.SetStateAction<User[]>>;
+  selectedContact: User | null;
+  setSelectedContact: (contactId: User | null) => void;
 }
 
-export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelectedContact }) => {
+export const Contacts: React.FC<ContactsProps> = ({onlineClients, setOnlineClients, offlineClients, setOfflineClients, selectedContact, setSelectedContact }) => {
   const [isContactsOpen, setIsContactsOpen] = useState<boolean>(false);
-  const [onlineClients, setOnlineClients] = useState<User[]>([]);
-  const [offlineClients, setOfflineClients] = useState<User[]>([]);
+
+
   const { socket, userIp } = useSocket();
   {/*test*/}
 
@@ -37,10 +41,10 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
   }, [socket, userIp]);
 
   return (
-    <div className='relative mx-4 h-[88vh] mt-4 flex flex-col bg-slate-500 items-center p-4'>
+    <div className='relative mx-4 h-full mt-4 flex flex-col bg-slate-500 items-center p-4'>
       <button
         className={`mx-4 rounded-full bg-slate-400 h-20 w-full transition-all duration-500`}
-        onClick={() => setIsContactsOpen(!isContactsOpen)}
+        onClick={() => {setIsContactsOpen(!isContactsOpen);}}
       >
         Contacts
       </button>
@@ -65,8 +69,8 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
                     onlineClients.map((client) => (
                       <li
                         key={client.ip}
-                        onClick={() => setSelectedContact(client.ip)}
-                        className={`cursor-pointer hover:bg-gray-300 p-2 rounded ${selectedContact === client.ip ? 'bg-gray-400' : ''}`}
+                        onClick={() => setSelectedContact(client)}
+                        className={`cursor-pointer hover:bg-gray-300 p-2 rounded ${selectedContact === client ? 'bg-gray-400' : ''}`}
                       >
                         {client.name}
                       </li>
@@ -82,8 +86,8 @@ export const Contacts: React.FC<ContactsProps> = ({ selectedContact, setSelected
                     offlineClients.map((client) => (
                       <li
                         key={client.ip}
-                        onClick={() => setSelectedContact(client.ip)}
-                        className={`cursor-pointer hover:bg-gray-300 p-2 rounded ${selectedContact === client.ip ? 'bg-gray-400' : ''}`}
+                        onClick={() => setSelectedContact(client)}
+                        className={`cursor-pointer hover:bg-gray-300 p-2 rounded ${selectedContact === client ? 'bg-gray-400' : ''}`}
                       >
                         {client.name}
                       </li>

@@ -6,9 +6,14 @@ import MessageInput from './MessageInput';
 import FilePreview from './FilePreview';
 import ImageModal from './ImageModal';
 import Message from '../interfaces/Message';
+import User from '../interfaces/User';
 
 interface ChatRoomProps {
-  selectedChat: string | null;
+  selectedChat: User | null;
+  onlineClients: User[];
+  offlineClients: User[];
+  setOnlineClients: React.Dispatch<React.SetStateAction<User[]>>;
+  setOfflineClients: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
 export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
@@ -22,6 +27,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   const chatBoxRef = useRef<HTMLDivElement | null>(null);
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
 
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const files = Array.from(event.target.files);
@@ -32,7 +38,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   const getChatLog = (): void => {
     if (socket && selectedChat) {
       setMessages([]);
-      socket.emit('requestChatLog', selectedChat);
+      socket.emit('requestChatLog', selectedChat.ip);
     }
   };
   const scrollToBottomIfNeeded = () => {
@@ -79,7 +85,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       text: msg,
       sent: new Date(),
       from: userIp,
-      to: selectedChat,
+      to: selectedChat.ip,
       attachments: fileObjects.map(file => ({ name: file.name })), // Only name is used for now
     }));
   
@@ -121,7 +127,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
         text: msg,
         sent: new Date(),
         from: userIp,
-        to: selectedChat,
+        to: selectedChat.ip,
         attachments: null,
       };
       console.log('Sending message:', newMessage);
@@ -143,9 +149,6 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       getChatLog();
   
       socket.on('receiveChatLog', (chatLog: Message[]) => {
-        chatLog.forEach((msg,index) => {
-          if(index>0) console.log(getTimeDifference(new Date(msg.sent), new Date()))
-        });
         setMessages(chatLog.map(msg => ({
           ...msg,
           sent: typeof msg.sent === 'string' ? new Date(msg.sent) : msg.sent,
@@ -156,7 +159,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       // Listen for live messages
       socket.on('receiveMessage', (message: Message) => {
         console.log('Received message:', message);
-        if (message.from === selectedChat || message.to === selectedChat) {
+        if (message.from === selectedChat.ip || message.to === selectedChat.ip) {
           setMessages(prevMessages => [...prevMessages, message]);
           // Determine if we need to scroll based on who sent the message
           if (message.from === userIp) {
@@ -179,13 +182,15 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
   }, [socket, selectedChat]);
 
   return (
-    <div className="relative rounded-2xl border-2 border-black w-full h-[90vh] flex flex-col mx-4 overflow-hidden">
+    <div className='flex flex-col w-full mx-4 bg-slate-500 rounded-2xl p-2'>
+    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)]'>{selectedChat?.name}</div>
+    <div className="relative rounded-2xl border-2w-full h-full flex flex-col overflow-hidden bg-white">
       <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
         {selectedChat ? messages.map((message, index) => (
-          <div key={index}>
+          <div key={index} className={`${message.from==userIp?"self-end":""}`}>
             {
             (index == 0 || new Date(messages[index - 1].sent).toLocaleDateString() !== new Date(message.sent).toLocaleDateString()) &&
-                <div className='w-full flex items-center justify-center bg-slate-300 mt-2 mb-4' style={{ boxShadow: '0 0 2px 10px #cbd5e1' }}><div className='bg-slate-700 rounded-full p-2 text-white'>
+                <div className='w-full flex items-center justify-center bg-slate-300 mt-2 mb-4' style={{ boxShadow: '0 0 2px 10px #cbd5e1' }}><div className='bg-slate-500 rounded-full p-2 text-white'>
                   {
                     getTimeDifference(new Date(message.sent), new Date()) === 0
                       ? 'Today'
@@ -205,11 +210,11 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
               }}
             />
           </div>
-        )) : <p className="text-center">Please select a chat room.</p>}
+        )) : <div className='h-full w-full flex items-center justify-center'><p className="text-center">Open the "Contacts" menu and select a contact to begin chatting.</p></div>}
       </div>
     
       {fileObjects.length > 0 && (
-        <div className="w-full h-fit p-4 border-black border-t-2 flex flex-wrap gap-4">
+        <div className="w-full h-fit p-4 border-slate-500 border-t-2 flex flex-wrap gap-4">
           {fileObjects.map((file, index) => (
             <FilePreview
               key={index}
@@ -239,6 +244,7 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({ selectedChat }) => {
       </>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
       )
       }
+    </div>
     </div>
     ); };
 

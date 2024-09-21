@@ -91,7 +91,7 @@ const hostIp = getHostIpAddress(); // Get host IPv4 address once
 
 function getChatFolderPath(fromIp: string, toIp: string): string {
   if (!fromIp || !toIp) {
-    throw new Error('Invalid IP addresses provided.');
+    throw new Error(`Invalid IP addresses provided: ${fromIp}, ${toIp}`);
   }
   const sortedIps = [fromIp, toIp].sort(); // Sort IPs to ensure consistent directory naming
   const folderName = `${sortedIps[0]}_to_${sortedIps[1]}`;
