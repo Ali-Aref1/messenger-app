@@ -180,8 +180,8 @@ export const ChatRoom: React.FC = () => {
     <div className="relative rounded-2xl border-2w-full h-full flex flex-col overflow-hidden bg-white">
       <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
         {selectedContact ? messages.map((message, index) => (
-          <div key={index} className={`${message.from==userIp?"self-end":""}`}>
-            {
+          <>
+          {
             (index == 0 || new Date(messages[index - 1].sent).toLocaleDateString() !== new Date(message.sent).toLocaleDateString()) &&
                 <div className='w-full flex items-center justify-center bg-slate-300 mt-2 mb-4' style={{ boxShadow: '0 0 2px 10px #cbd5e1' }}><div className='bg-slate-500 rounded-full p-2 text-white'>
                   {
@@ -193,6 +193,9 @@ export const ChatRoom: React.FC = () => {
                   }
                   </div></div>
             }
+          
+          <div key={index} className={`${message.from==userIp?"self-end":""}`}>
+
             <MessageBubble
               message={message}
               userIp={userIp || ''}
@@ -203,6 +206,7 @@ export const ChatRoom: React.FC = () => {
               }}
             />
           </div>
+          </>
         )) : <div className='h-full w-full flex items-center justify-center'><p className="text-center">Open the "Contacts" menu and select a contact to begin chatting.</p></div>}
       </div>
     
