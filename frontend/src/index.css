@@ -10,4 +10,25 @@ html[dir="rtl"] {
     direction: ltr;
     text-align: left;
   }
+/* width */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 10px;
+  box-shadow: 0 0 2px #96a0ad;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #96a0ad;
+}
   

@@ -13,7 +13,9 @@ interface MessageBubbleProps {
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selectedContact, handleImageClick }) => {
   const sentDate = typeof message.sent === 'string' ? new Date(message.sent) : message.sent;
-
+  const hours = sentDate.getHours()>12?sentDate.getHours()-12:sentDate.getHours();
+  const ampm = sentDate.getHours()>=12?'PM':'AM';
+  const formattedTime= `${String(hours).padStart(2, '0')}:${String(sentDate.getMinutes()).padStart(2, '0')} ${ampm}`;
   return (
     <div
       className={`p-2 w-fit max-w-[30vw] rounded-2xl mx-2 my-2 text-wrap ${message.from === userIp ? "bg-sky-600 text-white" : "bg-slate-300 text-gray-800"}`}
@@ -55,7 +57,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
       )}
       {message.text}
       <div className={`text-xs text-right opacity-50 ${message.from === userIp ? "text-white" : "text-gray-800"}`}>
-        {sentDate.toLocaleTimeString()}
+        {formattedTime}
       </div>
     </div>
   );
