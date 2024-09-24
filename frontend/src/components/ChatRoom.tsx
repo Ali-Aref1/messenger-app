@@ -7,6 +7,7 @@ import FilePreview from './FilePreview';
 import ImageModal from './ImageModal';
 import Message from '../interfaces/Message';
 import msgsound from '../assets/audio/newmsg.mp3';
+import Arrow from '../assets/arrow.png';
 import { useClientContext } from '../ClientContext';
 import { Box, useToast } from '@chakra-ui/react';
 
@@ -30,6 +31,18 @@ export const ChatRoom: React.FC = () => {
   const toast = useToast();
   const [unreadDisplay, setUnreadDisplay] = useState<number>(0);
 
+  const scrollToFirstUnread = (): void => {
+    if (chatBoxRef.current && unreadDisplay > 0) {
+      const firstUnreadMessageIndex = messages.length - unreadDisplay;
+      const firstUnreadMessageElement = chatBoxRef.current.children[firstUnreadMessageIndex];
+      if (firstUnreadMessageElement) {
+        firstUnreadMessageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => {
+          setUnreadDisplay(0);
+        }, 500);
+      }
+    }
+  };
   const markAsRead = (message:Message): void => {
     if (socket && selectedContact) {
       if (message.from === selectedContact.ip) {
@@ -145,6 +158,7 @@ export const ChatRoom: React.FC = () => {
       setMessages(prevMessages => [...prevMessages, newMessage]);
       socket?.emit('sendMessage', newMessage);
       setMsg('');
+      setUnreadDisplay(0);
       setFileObjects([]); // Clear file objects after sending
       setScrollToBottom(true); // Trigger scroll to bottom
     }
@@ -176,11 +190,6 @@ export const ChatRoom: React.FC = () => {
   
       // Listen for live messages
       socket.on('receiveMessage', (message: Message) => {
-        console.log('Received message:', message);
-        console.log(onlineClients);
-        const sender = onlineClients.find(user => user.ip === message.from) || offlineClients.find(user => user.ip === message.from);
-        const senderName = sender ? sender.name : message.from; // Fallback to IP if name is not found
-
         msgAudio.current?.play().catch((error) => console.error('Audio playback error:', error));
         if(!selectedContact || message.from !== selectedContact.ip) {
           setUnreads((prevUnreads: any) => {
@@ -192,7 +201,7 @@ export const ChatRoom: React.FC = () => {
             position: 'top-right',
             render: () => (
               <Box color='white' p={3} bg='blue.500'>
-                New message from {senderName}
+                New message from {onlineClients.find(user => user.ip === message.from)?.name || offlineClients.find(user => user.ip === message.from)?.name}
               </Box>
             ),
           });
@@ -219,13 +228,13 @@ export const ChatRoom: React.FC = () => {
         socket.off('receiveMessage');
       };
     }
-  }, [socket, selectedContact]);
+  }, [socket, selectedContact, onlineClients, offlineClients]);
   
 
 
   return (
     <div className='flex flex-col w-full mx-4 bg-slate-500 rounded-2xl p-2'>
-    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)] flex items-center gap-[10px]'><p>{selectedContact?.name}</p><div className={`rounded-full w-2 h-2 mt-1 ${onlineClients.find(user => user.ip === selectedContact?.ip)?'bg-green-400':'bg-gray-800'}`} style={onlineClients.find(user => user.ip === selectedContact?.ip)&&{boxShadow:"0 0 5px 4px rgba(74, 222, 128, 0.5)"}}></div></div>
+    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)] flex items-center gap-[10px]'><p>{selectedContact?.name}</p>{selectedContact &&<div className={`rounded-full w-2 h-2 mt-1 ${onlineClients.find(user => user.ip === selectedContact?.ip)?'bg-green-400':'bg-gray-800'}`} style={onlineClients.find(user => user.ip === selectedContact?.ip)&&{boxShadow:"0 0 5px 4px rgba(74, 222, 128, 0.5)"}}></div>}</div>
     <div className="relative rounded-2xl border-2w-full h-full flex flex-col overflow-hidden bg-white">
       <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
         {selectedContact ? messages.map((message, index) => (
@@ -256,10 +265,28 @@ export const ChatRoom: React.FC = () => {
                 setIsImageModalOpen(true);
               }}
             />
+          
           </div>
           </>
         )) : <div className='h-full w-full flex items-center justify-center'><p className="text-center">Open the "Contacts" menu and select a contact to begin chatting.</p></div>}
       </div>
+      {(selectedContact && unreadDisplay > 0 && (() => {
+        const firstUnreadMessageIndex = messages.length - unreadDisplay;
+        const firstUnreadMessageElement = chatBoxRef.current?.children[firstUnreadMessageIndex];
+        if (firstUnreadMessageElement) {
+          const { top, bottom } = firstUnreadMessageElement.getBoundingClientRect();
+          const { innerHeight } = window;
+          return !(top >= 0 && bottom <= innerHeight);
+        }
+        return true;
+      })()) && (
+        <div
+          className='rounded-full bg-slate-300 w-12 h-12 p-4 absolute right-5 bottom-[70px] cursor-pointer flex items-center justify-center'
+          onClick={scrollToFirstUnread}
+        >
+          <img src={Arrow} className='invert -rotate-90' />
+        </div>
+      )}
     
       {fileObjects.length > 0 && (
         <div className="w-full h-fit p-4 border-slate-500 border-t-2 flex flex-wrap gap-4">
