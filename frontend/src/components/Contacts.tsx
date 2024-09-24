@@ -7,31 +7,11 @@ import { useClientContext } from '../ClientContext';
 
 export const Contacts: React.FC = () => {
   const [isContactsOpen, setIsContactsOpen] = useState<boolean>(false);
-  const { selectedContact, setSelectedContact, onlineClients, setOnlineClients, offlineClients, setOfflineClients } = useClientContext();
-
+  const { selectedContact, setSelectedContact, onlineClients, offlineClients, unreads, setUnreads } = useClientContext();
   const { socket, userIp } = useSocket();
   {/*test*/}
 
-  useEffect(() => {
-    if (socket && userIp) {
-      socket.emit('requestClients');
-
-      socket.on('updateClients', (data: { online: User[], offline: User[] }) => {
-        if (data && Array.isArray(data.online) && Array.isArray(data.offline)) {
-          const filteredOnline = data.online.filter(user => user.ip !== userIp);
-          const filteredOffline = data.offline.filter(user => user.ip !== userIp);
-          setOnlineClients(filteredOnline);
-          setOfflineClients(filteredOffline);
-        } else {
-          console.error('Received data is not in the expected format:', data);
-        }
-      });
-
-      return () => {
-        socket.off('updateClients');
-      };
-    }
-  }, [socket, userIp]);
+ 
 
   return (
     <div className='relative mx-4 h-full flex flex-col bg-slate-500 items-center p-4 rounded-xl'>
@@ -62,10 +42,21 @@ export const Contacts: React.FC = () => {
                     onlineClients.map((client) => (
                       <li
                         key={client.ip}
-                        onClick={() => setSelectedContact(client)}
+                        onClick={() => {setSelectedContact(client)
+
+                        }}
                         className={`cursor-pointer hover:bg-gray-300 p-2 rounded ${selectedContact === client ? 'bg-gray-400' : ''}`}
                       >
-                        {client.name}
+                      <div className='flex justify-between'>
+                        <p>{client.name}</p>
+                        {unreads && unreads[client.ip] > 0 ? 
+                          <div className='text-white bg-green-500 rounded-full w-6 flex items-center justify-center text-[12px]' style={{boxShadow:"0 0 6px rgb(34 197 94)"}}>
+                            <p>{unreads[client.ip]}</p>
+                          </div>
+                          : null
+                        }
+
+                      </div>
                       </li>
                     ))
                   ) : (
@@ -79,10 +70,20 @@ export const Contacts: React.FC = () => {
                     offlineClients.map((client) => (
                       <li
                         key={client.ip}
-                        onClick={() => setSelectedContact(client)}
+                        onClick={() => {setSelectedContact(client)
+                          setUnreads({...unreads,[client.ip]:0});
+                        }}
                         className={`cursor-pointer hover:bg-gray-300 p-2 rounded ${selectedContact === client ? 'bg-gray-400' : ''}`}
                       >
-                        {client.name}
+                      <div className='flex justify-between'>
+                        <p>{client.name}</p>
+                        {unreads && unreads[client.ip] > 0 ? 
+                        <div className='text-white bg-green-500 rounded-full w-6 flex items-center justify-center text-[12px]' style={{boxShadow:"0 0 6px rgb(34 197 94)"}}>
+                        <p>{unreads[client.ip]}</p>
+                        </div>
+                        :null
+                        }
+                      </div>
                       </li>
                     ))
                   ) : (

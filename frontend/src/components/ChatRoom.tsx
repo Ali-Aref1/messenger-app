@@ -6,7 +6,11 @@ import MessageInput from './MessageInput';
 import FilePreview from './FilePreview';
 import ImageModal from './ImageModal';
 import Message from '../interfaces/Message';
+import msgsound from '../assets/audio/newmsg.mp3';
 import { useClientContext } from '../ClientContext';
+import { Box, useToast } from '@chakra-ui/react';
+
+
 
 export const ChatRoom: React.FC = () => {
   const [msg, setMsg] = useState<string>('');
@@ -18,8 +22,21 @@ export const ChatRoom: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const chatBoxRef = useRef<HTMLDivElement | null>(null);
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
-  const { selectedContact } = useClientContext();
+  const { selectedContact, onlineClients, offlineClients, unreads, setUnreads } = useClientContext();
+  const msgAudio = useRef<HTMLAudioElement | null>(null);
 
+  
+  
+  const toast = useToast();
+  const [unreadDisplay, setUnreadDisplay] = useState<number>(0);
+
+  const markAsRead = (message:Message): void => {
+    if (socket && selectedContact) {
+      if (message.from === selectedContact.ip) {
+        socket.emit('markAsRead', message);
+      }
+    }
+  };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -122,6 +139,7 @@ export const ChatRoom: React.FC = () => {
         from: userIp,
         to: selectedContact.ip,
         attachments: null,
+        read:false
       };
       console.log('Sending message:', newMessage);
       setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -133,7 +151,8 @@ export const ChatRoom: React.FC = () => {
   };
 
   useEffect(() => {
-    if (socket && selectedContact) {
+    msgAudio.current = new Audio(msgsound);
+    if (socket) {
       // Clear current messages
       setMessages([]);
       setScrollToBottom(true);
@@ -142,18 +161,45 @@ export const ChatRoom: React.FC = () => {
       getChatLog();
   
       socket.on('receiveChatLog', (chatLog: Message[]) => {
+        
         setMessages(chatLog.map(msg => ({
           ...msg,
           sent: typeof msg.sent === 'string' ? new Date(msg.sent) : msg.sent,
         })));
+        chatLog.forEach((message) => {
+          markAsRead(message);
+        });
+        setUnreadDisplay(unreads[selectedContact?.ip as string] || 0);
+        setUnreads({...unreads,[selectedContact?.ip as string]:0});
         setScrollToBottom(true); // Ensure scroll to bottom when chat log is received
       });
   
       // Listen for live messages
       socket.on('receiveMessage', (message: Message) => {
         console.log('Received message:', message);
-        if (message.from === selectedContact.ip || message.to === selectedContact.ip) {
+        console.log(onlineClients);
+        const sender = onlineClients.find(user => user.ip === message.from) || offlineClients.find(user => user.ip === message.from);
+        const senderName = sender ? sender.name : message.from; // Fallback to IP if name is not found
+
+        msgAudio.current?.play().catch((error) => console.error('Audio playback error:', error));
+        if(!selectedContact || message.from !== selectedContact.ip) {
+          setUnreads((prevUnreads: any) => {
+            const newUnreads = { ...prevUnreads };
+            newUnreads[message.from] = (newUnreads[message.from] || 0) + 1;
+            return newUnreads;
+          });
+          toast({
+            position: 'top-right',
+            render: () => (
+              <Box color='white' p={3} bg='blue.500'>
+                New message from {senderName}
+              </Box>
+            ),
+          });
+        }
+        if (message.from === selectedContact?.ip || message.to === selectedContact?.ip) {
           setMessages(prevMessages => [...prevMessages, message]);
+          markAsRead(message);
           // Determine if we need to scroll based on who sent the message
           if (message.from === userIp) {
             setScrollToBottom(true);
@@ -164,6 +210,7 @@ export const ChatRoom: React.FC = () => {
             }
           }
         }
+
       });
   
       // Clean up socket listeners on unmount or when selectedContact changes
@@ -173,10 +220,12 @@ export const ChatRoom: React.FC = () => {
       };
     }
   }, [socket, selectedContact]);
+  
+
 
   return (
     <div className='flex flex-col w-full mx-4 bg-slate-500 rounded-2xl p-2'>
-    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)]'>{selectedContact?.name}</div>
+    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)] flex items-center gap-[10px]'><p>{selectedContact?.name}</p><div className={`rounded-full w-2 h-2 mt-1 ${onlineClients.find(user => user.ip === selectedContact?.ip)?'bg-green-400':'bg-gray-800'}`} style={onlineClients.find(user => user.ip === selectedContact?.ip)&&{boxShadow:"0 0 5px 4px rgba(74, 222, 128, 0.5)"}}></div></div>
     <div className="relative rounded-2xl border-2w-full h-full flex flex-col overflow-hidden bg-white">
       <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
         {selectedContact ? messages.map((message, index) => (
@@ -193,7 +242,9 @@ export const ChatRoom: React.FC = () => {
                   }
                   </div></div>
             }
-          
+          {
+            index==(messages.length-unreadDisplay) && <div className='w-full flex items-center justify-center mt-2 mb-4'><div className='bg-slate-300 rounded-full p-2 text-slate-900 text-sm'>Unread Messages</div></div>
+          }
           <div key={index} className={`${message.from==userIp?"self-end":""}`}>
 
             <MessageBubble

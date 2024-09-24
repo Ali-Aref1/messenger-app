@@ -20,6 +20,7 @@ const io = new Server(server, {
 });
 
 const serverPort = process.env.YOUR_PORT || process.env.PORT || 4000;
+ensureReadAttributeInMessages();
 server.listen(Number(serverPort), '0.0.0.0', () => {
   console.log('Server listening on port ' + serverPort);
 });
@@ -50,6 +51,26 @@ const storage = multer.diskStorage({
 
 
 const upload = multer({ storage: storage });
+function ensureReadAttributeInMessages(): void {
+  const chatFolders = fs.readdirSync(path.resolve('chats'));
+
+  chatFolders.forEach(folder => {
+    const messagesFilePath = path.resolve('chats', folder, 'messages.json');
+    if (fs.existsSync(messagesFilePath)) {
+      const fileContent = fs.readFileSync(messagesFilePath);
+      const messages: Message[] = JSON.parse(fileContent.toString());
+
+      const updatedMessages = messages.map(message => ({
+        ...message,
+        read: message.read !== undefined ? message.read : true
+      }));
+
+      fs.writeFileSync(messagesFilePath, JSON.stringify(updatedMessages, null, 2));
+    }
+  });
+}
+
+ensureReadAttributeInMessages();
 
 interface Message {
   text: string;
@@ -57,6 +78,7 @@ interface Message {
   from: string;
   to: string;
   attachments: { name: string }[] | null;
+  read: boolean|undefined;
 }
 
 // Helper functions
@@ -156,6 +178,34 @@ function getSocketIdByUserIp(userIp: string): string | null {
   return null;
 }
 
+function sendUnreadMessages(socket: any) {
+  const userIp = users[socket.id];
+  if (userIp) {
+    const registeredUsers = loadRegisteredUsers();
+    const unreadMessages: { [key: string]: number } = {};
+
+    registeredUsers.forEach(user => {
+      if (user.ip !== userIp) {
+        const chatFolderPath = getChatFolderPath(userIp, user.ip);
+        const messagesFilePath = path.resolve(chatFolderPath, 'messages.json');
+        if (fs.existsSync(messagesFilePath)) {
+          const fileContent = fs.readFileSync(messagesFilePath);
+          const messages: Message[] = JSON.parse(fileContent.toString());
+
+          const unreads = messages.filter(message => !message.read && message.to === userIp);
+          if (unreads.length > 0) {
+            unreadMessages[user.ip] = unreads.length;
+          }
+        }
+      }
+    });
+    if(Object.keys(unreadMessages).length === 0){
+      return;
+    }
+    socket.emit('receiveUnreads', unreadMessages);
+  }
+}
+
 io.on('connection', (socket) => {
   let userIp = socket.request.headers['x-forwarded-for'] as string || socket.request.connection.remoteAddress || '';
 
@@ -170,6 +220,7 @@ io.on('connection', (socket) => {
 
   console.log('New user connected:');
   console.log(userInfo);
+  socket.broadcast.emit('connected', userInfo);
   socket.emit('receiveIp', userIp);
   users[socket.id] = userIp;
 
@@ -221,14 +272,40 @@ io.on('connection', (socket) => {
 
     }
   });
-  
-  
 
+  socket.on('markAsRead', (message: Message) => {
+    const userIp = users[socket.id];
+    if (userIp) {
+      const chatFolderPath = getChatFolderPath(userIp, message.from);
+      const messagesFilePath = path.resolve(chatFolderPath, 'messages.json'); // Use path.resolve instead of __dirname
+      if (fs.existsSync(messagesFilePath)) {
+        const fileContent = fs.readFileSync(messagesFilePath);
+        const messages: Message[] = JSON.parse(fileContent.toString());
+
+        const updatedMessages = messages.map(m => {
+          if (m.sent === message.sent) {
+            return { ...m, read: true };
+          }
+          return m;
+        });
+
+        fs.writeFileSync(messagesFilePath, JSON.stringify(updatedMessages, null, 2));
+      }
+    }
+  });
+
+
+  // Call the function when the socket connects
+  socket.on('requestUnreads', () => {
+    sendUnreadMessages(socket);
+  });
+    
   socket.on('disconnect', () => {
     const user = loadRegisteredUsers().find(u => u.ip === userIp);
     const userName = user ? user.name : 'Unknown User';
     const userInfo = { name: userName, ip: userIp, socketId: socket.id };
-    console.log('User disconnected: ');
+    console.log('User disconnected: ',userInfo);
+    socket.broadcast.emit('disconnected', userInfo);
     console.log(userInfo);
     delete users[socket.id];
 
