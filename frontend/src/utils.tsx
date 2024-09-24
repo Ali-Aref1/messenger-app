@@ -44,3 +44,9 @@ export const getTimeDifference = (date1: Date, date2: Date): number => {
   const timeDifference = startOfDay2.getTime() - startOfDay1.getTime();
   return timeDifference / (1000 * 60 * 60 * 24);
 }
+
+export const formatTime = (date: Date) => {
+  const hours = date.getHours()==0?12:(date.getHours()>12?date.getHours()-12:date.getHours());
+  const ampm = date.getHours()>=12?'PM':'AM';
+  return `${String(hours).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`;
+}
