@@ -1,4 +1,5 @@
 import React, { ChangeEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import attachIcon from '../assets/paper-clip.png';
 
 interface MessageInputProps {
@@ -11,6 +12,7 @@ interface MessageInputProps {
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ msg, setMsg, sendMessage, handleFileChange, fileObjects, fileInputRef }) => {
+  const {t} = useTranslation();
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -32,14 +34,14 @@ const MessageInput: React.FC<MessageInputProps> = ({ msg, setMsg, sendMessage, h
         value={msg}
         onChange={(e) => {setMsg(e.target.value); }}
         onKeyDown={handleKeyPress}
-        placeholder="Type a message..."
+        placeholder={t('type')}
         className="flex-1 p-2 border-2 border-gray-400 rounded"
       />
       <button onClick={() => fileInputRef.current?.click()} className="bg-blue-500 text-white rounded px-4 py-2">
         <img src={attachIcon} alt="Attach" className="w-6 h-6" />
       </button>
       <button onClick={sendMessage} className={`bg-green-500 text-white rounded px-4 py-2 ${(msg.trim()==""&&fileObjects.length==0)&&"disabled opacity-25 cursor-not-allowed"}`}>
-        Send
+        {t('send')}
       </button>
     </div>
   );

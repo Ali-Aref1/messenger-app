@@ -10,7 +10,7 @@ import msgsound from '../assets/audio/newmsg.mp3';
 import Arrow from '../assets/arrow.png';
 import { useClientContext } from '../ClientContext';
 import { Box, useToast } from '@chakra-ui/react';
-
+import { useTranslation } from 'react-i18next';
 
 
 export const ChatRoom: React.FC = () => {
@@ -24,6 +24,7 @@ export const ChatRoom: React.FC = () => {
   const chatBoxRef = useRef<HTMLDivElement | null>(null);
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
   const { selectedContact, onlineClients, offlineClients, unreads, setUnreads } = useClientContext();
+  const [t,i18n] = useTranslation();
   const msgAudio = useRef<HTMLAudioElement | null>(null);
 
   
@@ -234,7 +235,7 @@ export const ChatRoom: React.FC = () => {
 
   return (
     <div className='flex flex-col w-full mx-4 bg-slate-500 rounded-2xl p-2'>
-    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)] flex items-center gap-[10px]'><p>{selectedContact?.name}</p>{selectedContact &&<div className={`rounded-full w-2 h-2 mt-1 ${onlineClients.find(user => user.ip === selectedContact?.ip)?'bg-green-400':'bg-gray-800'}`} style={onlineClients.find(user => user.ip === selectedContact?.ip)&&{boxShadow:"0 0 5px 4px rgba(74, 222, 128, 0.5)"}}></div>}</div>
+    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)] flex items-center gap-[10px] mb-2'><p>{selectedContact?.name}</p>{selectedContact &&<div className={`rounded-full w-2 h-2 mt-1 ${onlineClients.find(user => user.ip === selectedContact?.ip)?'bg-green-400':'bg-gray-800'}`} style={onlineClients.find(user => user.ip === selectedContact?.ip)&&{boxShadow:"0 0 5px 4px rgba(74, 222, 128, 0.5)"}}></div>}</div>
     <div className="relative rounded-2xl border-2w-full h-full flex flex-col overflow-hidden bg-white">
       <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
         {selectedContact ? messages.map((message, index) => (
@@ -268,7 +269,7 @@ export const ChatRoom: React.FC = () => {
           
           </div>
           </>
-        )) : <div className='h-full w-full flex items-center justify-center'><p className="text-center">Open the "Contacts" menu and select a contact to begin chatting.</p></div>}
+        )) : <div className='h-full w-full flex items-center justify-center'><p className="text-center">{t('start')}</p></div>}
       </div>
       {(selectedContact && unreadDisplay > 0 && (() => {
         const firstUnreadMessageIndex = messages.length - unreadDisplay;

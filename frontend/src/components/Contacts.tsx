@@ -3,13 +3,14 @@ import { useSocket } from '../SocketContext';
 import { Spinner, Box, Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 import User from '../interfaces/User';
 import { useClientContext } from '../ClientContext';
+import { useTranslation } from 'react-i18next';
 
 
 export const Contacts: React.FC = () => {
   const [isContactsOpen, setIsContactsOpen] = useState<boolean>(false);
   const { selectedContact, setSelectedContact, onlineClients, offlineClients, unreads, setUnreads } = useClientContext();
   const { socket, userIp } = useSocket();
-  {/*test*/}
+  const { t } = useTranslation();
 
  
 
@@ -19,7 +20,7 @@ export const Contacts: React.FC = () => {
         className={`mx-4 rounded-full bg-slate-400 h-20 w-full transition-all duration-500`}
         onClick={() => {setIsContactsOpen(!isContactsOpen);}}
       >
-        Contacts
+        {t('contacts')}
       </button>
       <div
         className={`relative ${isContactsOpen ? 'w-60' : 'w-0'} transition-all bg-slate-200 flex-grow rounded-2xl p-4 my-4 mx-4 text-gray-600 overflow-hidden`}
@@ -32,8 +33,8 @@ export const Contacts: React.FC = () => {
         ) : isContactsOpen? (
           <Tabs variant='enclosed'>
             <TabList>
-              <Tab>Online</Tab>
-              <Tab>Offline</Tab>
+              <Tab>{t("online")}</Tab>
+              <Tab>{t("offline")}</Tab>
             </TabList>
             <TabPanels>
               <TabPanel>
@@ -60,7 +61,7 @@ export const Contacts: React.FC = () => {
                       </li>
                     ))
                   ) : (
-                    <p>No online clients</p>
+                    <p>{t("no_online")}</p>
                   )}
                 </ul>
               </TabPanel>
@@ -87,7 +88,7 @@ export const Contacts: React.FC = () => {
                       </li>
                     ))
                   ) : (
-                    <p>No offline clients</p>
+                    <p>{t("no_offline")}</p>
                   )}
                 </ul>
               </TabPanel>

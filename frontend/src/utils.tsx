@@ -45,8 +45,20 @@ export const getTimeDifference = (date1: Date, date2: Date): number => {
   return timeDifference / (1000 * 60 * 60 * 24);
 }
 
-export const formatTime = (date: Date) => {
-  const hours = date.getHours()==0?12:(date.getHours()>12?date.getHours()-12:date.getHours());
-  const ampm = date.getHours()>=12?'PM':'AM';
+export const convertToIndianNumerals = (number: number): string => {
+  const indianNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return number.toString().split('').map(digit => indianNumerals[parseInt(digit)]).join('');
+};
+
+export const formatTime = (date: Date,lang:string) => {
+  let hours = date.getHours()==0?12:(date.getHours()>12?date.getHours()-12:date.getHours());
+  let ampm;
+  if(lang==='en'||lang==='en-US'){
+    ampm = date.getHours() >= 12 ? 'PM' : 'AM';
   return `${String(hours).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`;
+  }
+  else if(lang==='ar'){
+    ampm = date.getHours() >= 12 ? 'م' : 'ص';
+    return `${ampm} ${ convertToIndianNumerals(hours).padStart(2,'۰')}:${convertToIndianNumerals(date.getMinutes()).padStart(2, '۰')}`;
+  }
 }

@@ -3,6 +3,7 @@ import { Spinner } from '@chakra-ui/react';
 import Message from '../interfaces/Message';
 import { getFileIcon, isImageFile, getDirectoryPath, formatTime } from '../utils';
 import User from '../interfaces/User';
+import { useTranslation } from 'react-i18next';
 
 interface MessageBubbleProps {
   message: Message;
@@ -13,6 +14,7 @@ interface MessageBubbleProps {
 
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selectedContact, handleImageClick }) => {
+  const { t,i18n } = useTranslation();
 
   return (
     <div
@@ -55,7 +57,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, userIp, selected
       )}
       {message.text}
       <div className={`text-xs text-right opacity-50 ${message.from === userIp ? "text-white" : "text-gray-800"}`}>
-        {formatTime(new Date(message.sent))}
+        {formatTime(new Date(message.sent),i18n.language)}
       </div>
     </div>
   );
