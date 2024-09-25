@@ -29,12 +29,12 @@ export const getDirectoryPath = (userIp: string, chatIp: string): string => {
     const sortedIps = [userIp, chatIp].sort();
     return `${sortedIps[0]}_to_${sortedIps[1]}`;
   };
-export const FormatDate = (date: Date): string => {
-const day = String(date.getDate()); // Get day and add leading zero if needed
-const month = String(date.getMonth() + 1); // Get month (getMonth() is zero-indexed)
+export const FormatDate = (date: Date,lang:string): string => {
+const day = date.getDate(); // Get day and add leading zero if needed
+const month = date.getMonth() + 1; // Get month (getMonth() is zero-indexed)
 const year = date.getFullYear(); // Get the full year
 
-const formattedDate = `${day}/${month}/${year}`;
+const formattedDate = lang=='ar'?`${convertToIndianNumerals(year)}/${convertToIndianNumerals(month)}/${convertToIndianNumerals(day)}`:`${day}/${month}/${year}`;
 return formattedDate;
 }
 

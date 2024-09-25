@@ -4,8 +4,11 @@
     "online": "Online",
     "offline": "Offline",
     "no_online": "No online contacts",
-    "no offline": "No offline contacts",
+    "no_offline": "No offline contacts",
     "type": "Type a message...",
-    "send": "Send"
+    "send": "Send",
+    "yesterday": "Yesterday",
+    "today": "Today",
+    "unread": "Unread Messages"
   }
   

@@ -24,7 +24,7 @@ export const ChatRoom: React.FC = () => {
   const chatBoxRef = useRef<HTMLDivElement | null>(null);
   const [scrollToBottom, setScrollToBottom] = useState<boolean>(false);
   const { selectedContact, onlineClients, offlineClients, unreads, setUnreads } = useClientContext();
-  const [t,i18n] = useTranslation();
+  const {t,i18n} = useTranslation();
   const msgAudio = useRef<HTMLAudioElement | null>(null);
 
   
@@ -245,15 +245,15 @@ export const ChatRoom: React.FC = () => {
                 <div className='w-full flex items-center justify-center bg-slate-300 mt-2 mb-4' style={{ boxShadow: '0 0 2px 10px #cbd5e1' }}><div className='bg-slate-500 rounded-full p-2 text-white'>
                   {
                     getTimeDifference(new Date(message.sent), new Date()) === 0
-                      ? 'Today'
+                      ? t("today")
                       : getTimeDifference(new Date(message.sent), new Date()) === 1
-                      ? 'Yesterday'
-                      : FormatDate(new Date(message.sent))
+                      ? t("yesterday")
+                      : FormatDate(new Date(message.sent),i18n.language)
                   }
                   </div></div>
             }
           {
-            index==(messages.length-unreadDisplay) && <div className='w-full flex items-center justify-center mt-2 mb-4'><div className='bg-slate-300 rounded-full p-2 text-slate-900 text-sm'>Unread Messages</div></div>
+            index==(messages.length-unreadDisplay) && <div className='w-full flex items-center justify-center mt-2 mb-4'><div className='bg-slate-300 rounded-full p-2 text-slate-900 text-sm'>{t("unread")}</div></div>
           }
           <div key={index} className={`${message.from==userIp?"self-end":""}`}>
 
