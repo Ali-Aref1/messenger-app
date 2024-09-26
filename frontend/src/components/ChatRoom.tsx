@@ -288,7 +288,7 @@ export const ChatRoom: React.FC = () => {
         return true;
       })()) && (
         <div
-          className='rounded-full bg-slate-300 w-12 h-12 p-4 absolute right-5 bottom-[70px] cursor-pointer flex items-center justify-center'
+            className={`rounded-full ${useColorMode().colorMode=='light'?'bg-slate-300':'bg-gray-700'} w-12 h-12 p-4 absolute right-5 bottom-[70px] cursor-pointer flex items-center justify-center`}
           onClick={scrollToFirstUnread}
         >
           <img src={Arrow} className='invert -rotate-90' />
