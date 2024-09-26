@@ -9,7 +9,7 @@ import Message from '../interfaces/Message';
 import msgsound from '../assets/audio/newmsg.mp3';
 import Arrow from '../assets/arrow.png';
 import { useClientContext } from '../ClientContext';
-import { Box, useToast } from '@chakra-ui/react';
+import { Box, useToast, useColorMode } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
 
 
@@ -234,15 +234,16 @@ export const ChatRoom: React.FC = () => {
 
 
   return (
-    <div className='flex flex-col w-full mx-4 bg-slate-500 rounded-2xl p-2'>
-    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)] flex items-center gap-[10px] mb-2'><p>{selectedContact?.name}</p>{selectedContact &&<div className={`rounded-full w-2 h-2 mt-1 ${onlineClients.find(user => user.ip === selectedContact?.ip)?'bg-green-400':'bg-gray-800'}`} style={onlineClients.find(user => user.ip === selectedContact?.ip)&&{boxShadow:"0 0 5px 4px rgba(74, 222, 128, 0.5)"}}></div>}</div>
-    <div className="relative rounded-2xl border-2w-full h-full flex flex-col overflow-hidden bg-white">
+    <div className='flex flex-col w-full mx-4 bg-slate-500 rounded-2xl p-2' style={{ backgroundColor: useColorMode().colorMode === 'light' ? 'rgb(100, 116, 139)' : 'rgb(31, 41, 55)' }}>
+    <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)] flex items-center gap-[10px] mb-2'><p>{selectedContact?.name}</p>{selectedContact &&<div className={`rounded-full w-2 h-2 mt-1 ${onlineClients.find(user => user.ip === selectedContact?.ip)?'bg-green-400':useColorMode().colorMode=='light'?'bg-slate-600 shadow-[inset_0_0_2px_2px_#3d4b5e]':'bg-[#1A202C]'}`} style={onlineClients.find(user => user.ip === selectedContact?.ip)&&{boxShadow:"0 0 5px 4px rgba(74, 222, 128, 0.5)"}}></div>}</div>
+    <div className={`relative rounded-2xl border-2 w-full h-full flex flex-col overflow-hidden`} style={{ backgroundColor: useColorMode().colorMode === 'light' ? '#f0f0f0' : '#1a202c' }}>
       <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
         {selectedContact ? messages.map((message, index) => (
           <>
           {
             (index == 0 || new Date(messages[index - 1].sent).toLocaleDateString() !== new Date(message.sent).toLocaleDateString()) &&
-                <div className='w-full flex items-center justify-center bg-slate-300 mt-2 mb-4' style={{ boxShadow: '0 0 2px 10px #cbd5e1' }}><div className='bg-slate-500 rounded-full p-2 text-white'>
+                <div className={`w-full flex items-center justify-center mt-2 mb-4 ${useColorMode().colorMode === 'light' ? 'bg-slate-300' : 'bg-[#1F2937]'}`} style={{ boxShadow: useColorMode().colorMode === 'light' ? '0 0 2px 10px #cbd5e1' : '0 0 2px 10px #1F2937' }}>
+                  <div className={`rounded-full p-2 ${useColorMode().colorMode === 'light' ? 'bg-slate-500 text-white' : 'bg-slate-300 text-black'}`}>
                   {
                     getTimeDifference(new Date(message.sent), new Date()) === 0
                       ? t("today")
@@ -253,7 +254,12 @@ export const ChatRoom: React.FC = () => {
                   </div></div>
             }
           {
-            index==(messages.length-unreadDisplay) && <div className='w-full flex items-center justify-center mt-2 mb-4'><div className='bg-slate-300 rounded-full p-2 text-slate-900 text-sm'>{t("unread")}</div></div>
+            index==(messages.length-unreadDisplay) &&
+          <div className='w-full flex items-center justify-center mt-2 mb-4'>
+            <div className={`rounded-full p-2 ${useColorMode().colorMode === 'light' ? 'bg-slate-500 text-white' : 'bg-slate-300 text-black'}`}>
+            {t("unread")}
+            </div>
+          </div>
           }
           <div key={index} className={`${message.from==userIp?"self-end":""}`}>
 

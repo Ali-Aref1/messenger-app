@@ -4,11 +4,15 @@ import { TopBar } from './components/TopBar';
 import { Contacts } from './components/Contacts';
 import { SocketProvider } from './SocketContext';
 import { ClientProvider } from './ClientContext';
+import ScrollbarStyle from "./ScrollbarStyle";
+import GlobalScrollbarStyles from "./GlobalScrollbarStyles";
 
 function App() {
 
   return (
     <ChakraProvider>
+      <GlobalScrollbarStyles />
+      <ScrollbarStyle />
       <TopBar />
       <Center h="93vh">
         <SocketProvider>

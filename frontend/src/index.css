@@ -1,15 +1,24 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --scrollbar-track: #dadada;
+  --scrollbar-thumb: #afb9c6;
+  --scrollbar-thumb-hover: #96a0ad;
+  --scrollbar-thumb-shadow: #96a0ad;
+}
+
 html[dir="rtl"] {
-    direction: rtl;
-    text-align: right;
-  }
-  
-  html[dir="ltr"] {
-    direction: ltr;
-    text-align: left;
-  }
+  direction: rtl;
+  text-align: right;
+}
+
+html[dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 12px;
@@ -17,18 +26,25 @@ html[dir="rtl"] {
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--scrollbar-track);
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
-  box-shadow: 0 0 2px #96a0ad;
+  box-shadow: 0 0 2px var(--scrollbar-thumb-shadow);
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #96a0ad;
+  background: var(--scrollbar-thumb-hover);
 }
-  
+
+/* Dark mode */
+html.dark {
+  --scrollbar-track: #2e2e2e;
+  --scrollbar-thumb: #4a5568;
+  --scrollbar-thumb-hover: #2d3748;
+  --scrollbar-thumb-shadow: #2d3748;
+}

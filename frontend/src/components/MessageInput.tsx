@@ -1,6 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import attachIcon from '../assets/paper-clip.png';
+import { useColorMode } from '@chakra-ui/react';
 
 interface MessageInputProps {
   msg: string;
@@ -21,7 +22,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ msg, setMsg, sendMessage, h
   };
 
   return (
-    <div className="w-full h-fit p-2 border-slate-500 bg-slate-300 border-t-4 flex gap-2">
+    <div className="w-full h-fit p-2 border-slate-500 bg-slate-300 border-t-4 flex gap-2"  style={{ backgroundColor: useColorMode().colorMode === 'light' ? '#f0f0f0' : '#1a202c' , borderColor:useColorMode().colorMode === 'light' ? 'rgb(100, 116, 139)' : 'rgb(40, 49, 63)'}}>
       <input
         type="file"
         multiple
@@ -36,6 +37,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ msg, setMsg, sendMessage, h
         onKeyDown={handleKeyPress}
         placeholder={t('type')}
         className="flex-1 p-2 border-2 border-gray-400 rounded"
+        style={{ backgroundColor: useColorMode().colorMode === 'light' ? '#f0f0f0' : '#1a202c' , borderColor:useColorMode().colorMode === 'light' ? 'rgb(100, 116, 139)' : 'rgb(40, 49, 63)'}}
       />
       <button onClick={() => fileInputRef.current?.click()} className="bg-blue-500 text-white rounded px-4 py-2">
         <img src={attachIcon} alt="Attach" className="w-6 h-6" />
