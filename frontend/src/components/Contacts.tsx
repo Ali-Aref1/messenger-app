@@ -39,7 +39,7 @@ export const Contacts: React.FC = () => {
           <Tabs variant='unstyled' isFitted>
             <TabList>
                 <Tab>{t("online")}</Tab>
-                <div className="mx-2 border-l h-8 opacity-40" style={{borderColor:useColorMode().colorMode=='light'?"#64748B":"#1F2937"}}></div>
+                <div className="mx-2 border-l opacity-40" style={{borderColor:useColorMode().colorMode=='light'?"#64748B":"#1F2937"}}></div>
                 <Tab>{t("offline")}</Tab>
             </TabList>
             <TabIndicator mt='-1.5px' height='2px' bg={useColorMode().colorMode=='light'?"#64748B":"#1F2937"} borderRadius='1px' />
