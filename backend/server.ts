@@ -52,10 +52,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 function ensureReadAttributeInMessages(): void {
-  const chatFolders = fs.readdirSync(path.resolve('chats'));
+  const chatsPath = path.resolve('chats');
+  
+  if (!fs.existsSync(chatsPath)) {
+    fs.mkdirSync(chatsPath, { recursive: true });
+  }
+
+  const chatFolders = fs.readdirSync(chatsPath);
 
   chatFolders.forEach(folder => {
-    const messagesFilePath = path.resolve('chats', folder, 'messages.json');
+    const messagesFilePath = path.resolve(chatsPath, folder, 'messages.json');
     if (fs.existsSync(messagesFilePath)) {
       const fileContent = fs.readFileSync(messagesFilePath);
       const messages: Message[] = JSON.parse(fileContent.toString());

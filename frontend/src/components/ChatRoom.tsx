@@ -8,6 +8,7 @@ import ImageModal from './ImageModal';
 import Message from '../interfaces/Message';
 import msgsound from '../assets/audio/newmsg.mp3';
 import Arrow from '../assets/arrow.png';
+import HIPH from '../assets/f1c7d8a6-1161-49b2-8e77-2386ae3348d4.jpg';
 import { useClientContext } from '../ClientContext';
 import { Box, useToast, useColorMode } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
@@ -234,15 +235,16 @@ export const ChatRoom: React.FC = () => {
 
 
   return (
-    <div className='flex flex-col w-full mx-4 bg-slate-500 rounded-2xl p-2' style={{ backgroundColor: useColorMode().colorMode === 'light' ? 'rgb(100, 116, 139)' : 'rgb(31, 41, 55)' }}>
+    <div className='flex flex-col w-full mx-4 rounded-2xl p-2' style={{ backgroundColor: useColorMode().colorMode === 'light' ? 'rgb(100, 116, 139)' : 'rgb(31, 41, 55)' }}>
     <div className=' text-white text-2xl font-bold [text-shadow:_2px_2px_2px_rgb(82_98_122)] flex items-center gap-[10px] mb-2'><p>{selectedContact?.name}</p>{selectedContact &&<div className={`rounded-full w-2 h-2 mt-1 ${onlineClients.find(user => user.ip === selectedContact?.ip)?'bg-green-400':useColorMode().colorMode=='light'?'bg-slate-600 shadow-[inset_0_0_2px_2px_#3d4b5e]':'bg-[#1A202C]'}`} style={onlineClients.find(user => user.ip === selectedContact?.ip)&&{boxShadow:"0 0 5px 4px rgba(74, 222, 128, 0.5)"}}></div>}</div>
-    <div className={`relative rounded-2xl border-2 w-full h-full flex flex-col overflow-hidden`} style={{ backgroundColor: useColorMode().colorMode === 'light' ? '#f0f0f0' : '#1a202c' }}>
-      <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col">
+    <div className={`relative rounded-2xl border-2 w-full h-full flex flex-col overflow-hidden bg-cover bg-center`} style={{ backgroundColor: useColorMode().colorMode === 'light' ? '#f0f0f0' : '#1a202c' }}>
+    <div className='absolute w-full h-full overflow-y-auto z-0 opacity-25 bg-cover' style={{backgroundImage:`url(${HIPH})`}}></div>
+      <div ref={chatBoxRef} className="w-full h-full overflow-y-auto flex flex-col z-10">
         {selectedContact ? messages.map((message, index) => (
           <>
           {
             (index == 0 || new Date(messages[index - 1].sent).toLocaleDateString() !== new Date(message.sent).toLocaleDateString()) &&
-                <div className={`w-full flex items-center justify-center mt-2 mb-4 ${useColorMode().colorMode === 'light' ? 'bg-slate-300' : 'bg-[#1F2937]'}`} style={{ boxShadow: useColorMode().colorMode === 'light' ? '0 0 2px 10px #cbd5e1' : '0 0 2px 10px #1F2937' }}>
+                <div className={`w-full flex items-center justify-center mt-2 mb-4 ${useColorMode().colorMode === 'light' ? 'bg-slate-400' : 'bg-[#1F2937]'}`} style={{ boxShadow: useColorMode().colorMode === 'light' ? '0 0 2px 10px #94A3B8' : '0 0 2px 10px #1F2937' }}>
                   <div className={`rounded-full p-2 ${useColorMode().colorMode === 'light' ? 'bg-slate-500 text-white' : 'bg-slate-300 text-black'}`}>
                   {
                     getTimeDifference(new Date(message.sent), new Date()) === 0
@@ -288,7 +290,7 @@ export const ChatRoom: React.FC = () => {
         return true;
       })()) && (
         <div
-            className={`rounded-full ${useColorMode().colorMode=='light'?'bg-slate-300':'bg-gray-700'} w-12 h-12 p-4 absolute right-5 bottom-[70px] cursor-pointer flex items-center justify-center`}
+            className={`rounded-full ${useColorMode().colorMode=='light'?'bg-slate-300':'bg-gray-700'} z-10 w-12 h-12 p-4 absolute right-5 bottom-[70px] cursor-pointer flex items-center justify-center`}
           onClick={scrollToFirstUnread}
         >
           <img src={Arrow} className='invert -rotate-90' />
@@ -296,7 +298,7 @@ export const ChatRoom: React.FC = () => {
       )}
     
       {fileObjects.length > 0 && (
-        <div className="w-full h-fit p-4 border-slate-500 border-t-2 flex flex-wrap gap-4">
+        <div className="w-full h-fit p-4 border-slate-500 border-t-2 flex flex-wrap gap-4 z-10">
           {fileObjects.map((file, index) => (
             <FilePreview
               key={index}

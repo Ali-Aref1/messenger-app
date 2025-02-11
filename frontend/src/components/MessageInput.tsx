@@ -22,7 +22,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ msg, setMsg, sendMessage, h
   };
 
   return (
-    <div className="w-full h-fit p-2 border-slate-500 bg-slate-300 border-t-4 flex gap-2"  style={{ backgroundColor: useColorMode().colorMode === 'light' ? '#f0f0f0' : '#1a202c' , borderColor:useColorMode().colorMode === 'light' ? 'rgb(100, 116, 139)' : 'rgb(40, 49, 63)'}}>
+    <div className="z-10 w-full h-fit p-2 border-slate-500 bg-slate-300 border-t-4 flex gap-2"  style={{ backgroundColor: useColorMode().colorMode === 'light' ? '#f0f0f0' : '#1a202c' , borderColor:useColorMode().colorMode === 'light' ? 'rgb(100, 116, 139)' : 'rgb(40, 49, 63)'}}>
       <input
         type="file"
         multiple
